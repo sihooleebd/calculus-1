@@ -1,10 +1,11 @@
 [
     {
         "title": "Preview of Calculus",
-        "summary": "This section bridges the gap between static pre-calculus mathematics and the dynamic nature of calculus by addressing two fundamental problems: determining the slope of a tangent line to a curve and calculating the instantaneous velocity of a moving object. Both problems are solved using the same limiting process, where approximations—such as the slopes of secant lines or average velocities over shrinking time intervals—converge to a single, precise value. This concept of the \"limit\" serves as the foundation for the entire course, establishing the mathematical tools necessary to analyze instantaneous rates of change.",
+        "summary": "This section bridges the gap between static pre-calculus mathematics and the dynamic nature of calculus by addressing two fundamental problems: determining the slope of a tangent line to a curve and calculating the instantaneous velocity of a moving object. Both problems are solved using the same limiting process, where approximations\u2014such as the slopes of secant lines or average velocities over shrinking time intervals\u2014converge to a single, precise value. This concept of the \"limit\" serves as the foundation for the entire course, establishing the mathematical tools necessary to analyze instantaneous rates of change.",
         "pages": [
             {
-                "title": "Preview of Calculus"
+                "title": "Preview of Calculus",
+                "number": 1
             }
         ],
         "number": 0
@@ -24,6 +25,10 @@
             {
                 "title": "Calculating Limits using the Limit Laws",
                 "number": 6
+            },
+            {
+                "title": "The Precise Definition of a Limit",
+                "number": 7
             }
         ],
         "number": 1
