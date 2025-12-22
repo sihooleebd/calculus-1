@@ -1,0 +1,27 @@
+{
+    "title": "Calculus I",
+    "subtitle": "Explanations, Problems & Solutions",
+    "authors": [
+        "Sihoo Lee"
+    ],
+    "affiliation": "Korea Science Academy of KAIST",
+    "logo": null,
+    "show-solution": true,
+    "solutions-text": "Solutions",
+    "problems-text": "Problems",
+    "chapter-name": "Chapter",
+    "subchap-name": "Article",
+    "font": "IBM Plex Serif",
+    "title-font": "Noto Sans Adlam",
+    "display-cover": true,
+    "display-outline": true,
+    "display-chap-cover": true,
+    "box-margin": "5pt",
+    "box-inset": "15pt",
+    "render-sample-count": 5000,
+    "render-implicit-count": 100,
+    "display-mode": "print",
+    "pad-chapter-id": true,
+    "pad-page-id": true,
+    "heading-numbering": null
+}

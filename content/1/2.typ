@@ -1,0 +1,76 @@
+#import "../../templates/templater.typ": *
+- Limits Have some rules that we must comply to. 
+#theorem("The Laws of Limits")[
+  Suppose that $c$ i s a constant and the limits $lim_(x -> a) f(x)$ and $lim_(x -> a) g(x)$ exist. Then, the following properties hold:
+  1. $lim_(x -> a) [f(x) + g(x)] = lim_(x -> a) f(x) + lim_(x -> a) g(x)$
+  2. $lim_(x -> a) [f(x) - g(x)] = lim_(x -> a) f(x) - lim_(x -> a) g(x)$   
+  3. $lim_(x -> a) [c * f(x)] = c * lim_(x -> a) f(x)$
+  4. $lim_(x -> a) [f(x) * g(x)]
+    = lim_(x -> a) f(x) * lim_(x -> a) g(x)$
+  5. $lim_(x -> a) [f(x) / g(x)]
+    = (lim_(x -> a) f(x)) / (lim_(x -> a) g(x))$, provided that $lim_(x -> a) g(x) ≠ 0$
+]
+
+Using these laws, we can derive a few more : 
+
+#theorem("The Power Law of Limits")[
+  Suppose that $lim_(x -> a) f(x) = L$ and $n$ is a positive integer. Then,
+  $lim_(x -> a) [f(x)]^n = [lim_(x -> a) f(x)]^n = L^n$
+]
+
+#theorem("The Root Law of Limits")[
+  Suppose that $lim_(x -> a) f(x) = L$ and $n$ is a positive integer. Then,
+  $lim_(x -> a) [f(x)]^(1/n) = [lim_(x -> a) f(x)]^(1/n) = L^(1/n)$, provided that if $n$ is even, then $L ≥ 0$
+]
+
+also, some special limits :
+
+#theorem("The Constant Function Law")[
+  For any constant $c$, $lim_(x -> a) c = c$
+
+  Written differently, $lim_(x ->a) = a$
+]
+
+#example("Limit Law Basics")[
+  Evaluate $lim_(x -> 5) (2x^2 - 3x + 4)$. 
+  #solution("")[
+    $ lim_(x -> 5) (2x^2 - 3x + 4) = lim_(x -> 5) 2x^2 - lim_(x -> 5) 3x + lim_(x -> 5) 4 $ 
+    
+    ($because$ the Sum and Difference Law)
+
+    $ = 2 * lim_(x -> 5) x^2 - 3 * lim_(x -> 5) x + 4 $
+    
+    ($because$ the Constant Multiple Law)
+    $ = 2 * 5^2 - 3 * 5 + 4 $
+    
+    ($because$ the Power Law and Constant Function Law)
+    $ = 50 - 15 + 4 = 39 $
+  ]
+]
+
+Above, we have discussed that $lim_(x->a)x = a$. What if we generalize this into any function $f(x)$?
+#theorem("The Direct Substitution Property")[
+  If $f$ is a polynomial/rational function and $a$ is in the domain of $f$, at $x = a$, then $ lim_(x -> a) f(x) = f(a) $
+]
+
+#example("Direct Substitution Example")[
+  Evaluate $lim_(x -> 2) (x^3 - 4x + 1)/(x^2 + 3)$.
+  #solution("")[
+    Since the function is a rational function and $2$ is in the domain of the function, we can use the Direct Substitution Property.
+
+    $lim_(x -> 2) (x^3 - 4x + 1)/(x^2 + 3) = (2^3 - 4*2 + 1)/(2^2 + 3) = (8 - 8 + 1)/(4 + 3) = 1/7$
+  ]
+]
+
+#example("Laws of Limits General")[
+  Evaluate $lim_(x -> 1) (x^2-1)/(x-1)$.
+  #solution("")[
+    We cannot directly substitute $1$ into the function, since it would create a division by zero. However, we can simplify the expression first.
+
+    $ (x^2 - 1)/(x - 1) = ((x - 1)(x + 1))/(x - 1) = x + 1  because x ≠ 1 $.
+
+    Now we can find the limit:
+
+    $ lim_(x -> 1) (x + 1) = 1 + 1 = 2 $
+  ]
+]
