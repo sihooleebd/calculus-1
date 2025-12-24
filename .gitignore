@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# PDFs
+*.pdf
+!output.pdf
+
+# System
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.vscode/
+.idea/
+
+# Project specific
+templates/systemconfig/
+*.log

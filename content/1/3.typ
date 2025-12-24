@@ -5,8 +5,8 @@
 - Till now, we have been using _intuitive_ methods to define the limits of functions. However, in order to be more _precise_, we need a more rigorous definition of limits.
 
 #example("A Weird Function")[
-  Consider the following function : 
-  $ cases(2x - 1 &"    if " x eq.not 3, 6 &"    if " x = 3)$. 
+  Consider the following function :
+  $cases(2x - 1 &"    if " x eq.not 3, 6 &"    if " x = 3)$.
   What is $f(3)$? What is $lim_(x -> 3) f(x)$?
   #solution("")[
     $f(3) = 6$, since when $x = 3$, the function outputs $6$. However, to find $lim_(x -> 3) f(x)$, we need to see what value $f(x)$ approaches as $x$ gets closer and closer to $3$. As $x$ approaches $3$, $f(x)$ approaches $2(3) - 1 = 5$. Therefore, $lim_(x -> 3) f(x) = 5$.
@@ -35,7 +35,7 @@
   $ forall epsilon > 0, exists delta > 0, "s.t." 0<norm(x-a)<delta arrow.r.long.double norm(f(x)-L) < epsilon $
 ]
 
-Since we have to divide them later anyway, we can do it now : 
+Since we have to divide them later anyway, we can do it now :
 #definition("Precise definition of a left-hand limit")[
   Let $f$ be a function defined on an open interval containing $a$, except possibly at $a$ itself. We say that $lim_(x -> a^-) f(x) = L$ if for every $epsilon > 0$, there exists a $delta > 0$ such that
   $ norm(f(x)-L) < epsilon "    if    " a - delta < x < a $
@@ -56,7 +56,7 @@ One good way to understand the epsilon-delta method is by assuming we chose a "w
   The epsilon-delta method can only be used to *"prove"* that a certain limit value is correct. It cannot be used to *"find"* the limit value itself.
 ]
 
-Now lets utilize this to solve some problems. 
+Now lets utilize this to solve some problems.
 
 #example("Epsilon-Delta Basics")[
   Prove that $lim_(x -> 3) (4x - 5) = 7$ using the epsilon-delta definition of a limit.
@@ -64,7 +64,7 @@ Now lets utilize this to solve some problems.
     Let $epsilon > 0$ be given. We need to find a $delta > 0$ such that
     $ norm((4x - 5) - 7) < epsilon "    if    " 0<norm(x-3)<delta $
 
-    1. Preliminary Analysis : 
+    1. Preliminary Analysis :
     Simplifying the left side, we have :
     $ norm(4x - 12) = 4 * norm(x - 3) $
 
@@ -80,7 +80,7 @@ Now lets utilize this to solve some problems.
 
     Thus, by the epsilon-delta definition of a limit, we conclude that $lim_(x -> 3) (4x - 5) = 7$.
     #align(center)[
-      #image("../images/epsilon-delta-ex.png",width: 50%)
+      #image("../images/epsilon-delta-ex.png", width: 50%)
     ]
   ]
 ]
@@ -89,24 +89,28 @@ Now lets utilize this to solve some problems.
   Describe $lim_(x -> a) x^2 = a^2$ using the epsilon-delta definition of a limit.
   #solution("")[
     Let $epsilon > 0$ be given. We need to find a $delta > 0$ such that
-    $ norm(x^2 - a^2) < epsilon "    if    " 0<norm(x-a)<delta $  
+    $ norm(x^2 - a^2) < epsilon "    if    " 0<norm(x-a)<delta $
     1. Preliminary Analysis :
     Simplifying the left side, we have :
-    $ norm(x^2 - a^2) = norm((x - a)(x + a)) = norm(x - a) * norm(x + a) $ 
+    $ norm(x^2 - a^2) = norm((x - a)(x + a)) = norm(x - a) * norm(x + a) $
     To control $norm(x + a)$, we can restrict $delta$ to be less than $1$(an arbitrary number). This means that if $0 < norm(x - a) < delta < 1$, then
     $ norm(x - a) < 1 arrow.r.long.double norm(x) < norm(a) + 1 $
     Thus, we have
-    $ norm(x + a) ≤ norm(x) + norm(a) < (norm(a) + 1) + norm(a) = 2 * norm(a) + 1 $ 
+    $ norm(x + a) ≤ norm(x) + norm(a) < (norm(a) + 1) + norm(a) = 2 * norm(a) + 1 $
     Therefore, we want to ensure that
     $ norm(x - a) * (2 * norm(a) + 1) < epsilon "    if    " 0<norm(x-a)<delta < 1 $
     To achieve this, we can choose $delta = min(1, epsilon / (2 * norm(a) + 1))$. Then, if $0 < norm(x - a) < delta$, we have
-    $ norm(x^2 - a^2) = norm(x - a) * norm(x + a) < delta * (2 * norm(a) + 1) ≤ (epsilon / (2 * norm(a) + 1)) * (2 * norm(a) + 1) = epsilon $
+    $
+      norm(x^2 - a^2) = norm(x - a) * norm(x + a) < delta * (2 * norm(a) + 1) ≤ (epsilon / (2 * norm(a) + 1)) * (2 * norm(a) + 1) = epsilon
+    $
     2. Formal Proof :
-    Let $epsilon > 0$ be given. Choose $delta = min(1, epsilon / (2 * norm(a) + 1))$. Then, if $0 < norm  (x - a) < delta$, we have
-    $ norm(x^2 - a^2) = norm(x - a) * norm(x + a) < delta * (2 * norm(a) + 1) ≤ (epsilon / (2 * norm(a) + 1)) * (2 * norm(a) + 1) = epsilon $
+    Let $epsilon > 0$ be given. Choose $delta = min(1, epsilon / (2 * norm(a) + 1))$. Then, if $0 < norm (x - a) < delta$, we have
+    $
+      norm(x^2 - a^2) = norm(x - a) * norm(x + a) < delta * (2 * norm(a) + 1) ≤ (epsilon / (2 * norm(a) + 1)) * (2 * norm(a) + 1) = epsilon
+    $
     Thus, by the epsilon-delta definition of a limit, we conclude that $lim_(x -> a) x^2 = a^2$.
     #note("Why can we assign an arbitrary number to delta?")[
-      In the preliminary analysis, we restricted $delta$ to be less than $1$ to control the value of $norm(x + a)$. This is a common technique in epsilon-delta proofs to ensure that certain expressions remain bounded. By choosing $delta$ to be the minimum of $1$ and another expression, we can effectively manage the behavior of the function within the desired neighborhood around the point $a$. To say intuitively, we are "bounding" the function in the neighborhood of $a$ once more outside of delta. 
+      In the preliminary analysis, we restricted $delta$ to be less than $1$ to control the value of $norm(x + a)$. This is a common technique in epsilon-delta proofs to ensure that certain expressions remain bounded. By choosing $delta$ to be the minimum of $1$ and another expression, we can effectively manage the behavior of the function within the desired neighborhood around the point $a$. To say intuitively, we are "bounding" the function in the neighborhood of $a$ once more outside of delta.
     ]
   ]
 ]
@@ -115,7 +119,7 @@ Now lets utilize this to solve some problems.
   Describe $lim_(x->1)(x^2-1)/(x-1) = 2$ using the epsilon-delta definition of a limit.
   #solution("")[
     Let $epsilon > 0$ be given. We need to find a $delta > 0$ such that
-    $ norm((x^2 - 1)/(x - 1) - 2) < epsilon "    if    " 0<norm(x-1)<delta $  
+    $ norm((x^2 - 1)/(x - 1) - 2) < epsilon "    if    " 0<norm(x-1)<delta $
     1. Preliminary Analysis :
     Simplifying the left side, we have :
     $ norm((x^2 - 1)/(x - 1) - 2) = norm((x - 1)(x + 1)/(x - 1) - 2) = norm(x + 1 - 2) = norm(x - 1) $
@@ -135,7 +139,7 @@ Now lets utilize this to solve some problems.
   Describe $lim_(x->0+) sqrt(x) = 0$ using the epsilon-delta definition of a limit.
   #solution("")[
     Let $epsilon > 0$ be given. We need to find a $delta > 0$ such that
-    $ norm(sqrt(x) - 0) < epsilon "    if    " 0<x<delta $  
+    $ norm(sqrt(x) - 0) < epsilon "    if    " 0<x<delta $
     1. Preliminary Analysis :
     Simplifying the left side, we have :
     $ norm(sqrt(x) - 0) = sqrt(x) $
