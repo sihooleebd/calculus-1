@@ -4,7 +4,7 @@
 
 #import "@preview/cetz:0.4.2"
 #import "@preview/cetz-plot:0.1.3": plot
-#import "draw.typ": draw-func-obj, draw-geo
+#import "draw.typ": draw-data-series-obj, draw-func-obj, draw-geo
 
 /// Create a Cartesian (rectangular) coordinate canvas
 /// Renders geometry objects with x-y axes.
@@ -73,7 +73,10 @@
 
             if t == "func" {
               // Functions need to be added via plot.add
-              draw-func-obj(obj, theme, size: size, x-domain: x-domain, y-domain: y-domain)
+              draw-func-obj(obj, theme)
+            } else if t == "data-series" {
+              // Data series are drawn via plot context
+              draw-data-series-obj(obj, theme)
             } else if t != none {
               // Other geometry objects are drawn via annotate
               let aspect = (x-domain, y-domain, size.at(0), size.at(1))
@@ -85,7 +88,9 @@
             // Handle arrays of objects
             for sub-obj in obj {
               if type(sub-obj) == dictionary and sub-obj.at("type", default: none) == "func" {
-                draw-func-obj(sub-obj, theme, size: size, x-domain: x-domain, y-domain: y-domain)
+                draw-func-obj(sub-obj, theme)
+              } else if type(sub-obj) == dictionary and sub-obj.at("type", default: none) == "data-series" {
+                draw-data-series-obj(sub-obj, theme)
               } else if type(sub-obj) == dictionary {
                 let aspect = (x-domain, y-domain, size.at(0), size.at(1))
                 plot.annotate({
