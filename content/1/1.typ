@@ -115,8 +115,8 @@
       y-domain: (-1.5, 1.5),
       x-tick: 0.25,
       show-grid: true,
-      // sin(π/x) - singularity at x=0 handled automatically
-      graph(x => calc.sin(calc.pi / x), domain: (-1, 1), adaptive: true, label: $sin(pi/x)$),
+      // sin(π/x) - adaptive sampling handles singularity
+      graph(x => calc.sin(calc.pi / x), domain: (-1, 1), label: $sin(pi/x)$),
     )
   ]
 ]

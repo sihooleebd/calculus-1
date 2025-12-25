@@ -114,7 +114,8 @@ From the intuitive definition of left/right limits, we can know the following :
       graph(x => x * x, domain: (-0.5, 0.5)),
       graph(x => -(x * x), domain: (-0.5, 0.5)),
       // The squeezed function
-      graph(x => (x * x) * calc.sin(1 / x), domain: (-0.5, 0.5)),
+      graph(x => (x * x) * calc.sin(1 / x), domain: (-0.5, -0.0001)),
+      graph(x => (x * x) * calc.sin(1 / x), domain: (0.0001, 0.5)),
     )
   ]
 
