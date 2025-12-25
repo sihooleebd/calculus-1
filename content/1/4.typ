@@ -18,13 +18,13 @@ If these conditions are not met, we call the function is "discontinuous" at $x =
 
   (a) $f(x) = (x^2 - x - 2)/(x-2)$
 
-  (b) $f(x) = cases((x^2 - x - 2)/(x-2) &"    if  " x eq.not 2, 1 &"    if  " x = 2))$
+  (b) $f(x) = cases((x^2 - x - 2)/(x-2) &"    if  " x eq.not 2, 1 &"    if  " x = 2)$
 
   #solution("", "(a)")[
     The function is discontinuous at $x = 2$. This is because $f(2)$ is not defined, since the denominator becomes $0$ at this point. Therefore, the first condition for continuity is not satisfied.
   ]
   #solution("", "(b)")[
-    (b) The function is continuous at $x = 2$. Let's check the three conditions:
+    The function is continuous at $x = 2$. Let's check the three conditions:
     1. $f(2) = 1$, so the first condition is satisfied.
     2. To find $lim_(x -> 2) f(x)$, we simplify the expression for $x eq.not 2$ :
       $f(x) = (x^2 - x - 2)/(x-2) = ((x-2)(x+1))/(x-2) = x + 1$ for $x eq.not 2$.
@@ -41,6 +41,9 @@ If these conditions are not met, we call the function is "discontinuous" at $x =
     show-grid: true,
     // f(x) = (x²-x-2)/(x-2) = x+1 for x ≠ 2
     graph(x => x + 1, domain: (-1, 1.95), label: $f(x) = (x^2-x-2)/(x-2)$),
+    // Show the hole at (2, 3) - use hollow point
+    point(2, 3, label: "(2, 3)", style: (fill: none)),
+
     graph(x => x + 1, domain: (2.05, 5)),
     // Show the hole at (2, 3) - use hollow point
     point(2, 3, label: "(2, 3)", style: (fill: none)),
