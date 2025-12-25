@@ -74,3 +74,44 @@ Above, we have discussed that $lim_(x->a)x = a$. What if we generalize this into
     $ lim_(x -> 1) (x + 1) = 1 + 1 = 2 $
   ]
 ]
+
+From the intuitive definition of left/right limits, we can know the following : 
+#theorem("Relationship between One-Sided Limits and Two-Sided Limits")[
+  Let $f(x)$ be defined whilst $x$ is near $a$. Then, $ lim_(x -> a) f(x) = L $ if and only if both $ lim_(x -> a^+) f(x) = L $ and $ lim_(x -> a^-) f(x) = L $
+]
+
+= The Squeeze Theorem
+- Sometimes, it is hard to find the limit of a function directly. However, if we can find two other functions that "squeeze" the function we are interested in, we can use the Squeeze Theorem to find the limit.
+#theorem("The Squeeze Theorem")[
+  Let $f(x)$, $g(x)$, and $h(x)$ be functions defined on an open interval containing $a$, except possibly at $a$ itself. If for every $x$ in this interval, except possibly at $a$, we have
+  $ g(x) ≤ f(x) ≤ h(x) $
+  and if
+  $ lim_(x -> a) g(x) = lim_(x -> a) h(x) = L $
+  then,
+  $ lim_(x -> a) f(x) = L $
+]
+
+#example("Squeeze Theorem Example")[
+  Evaluate $ lim_(x -> 0) x^2 sin(1/x) $
+  #solution("")[
+    We know that $ -1 ≤ sin(1/x) ≤ 1 $ for all $x ≠ 0$. Multiplying all parts of the inequality by $x^2$ (which is always non-negative), we get :
+    $ -x^2 ≤ x^2 * sin(1/x) ≤ x^2 $
+
+    Now, we can find the limits of the two outer functions as $x$ approaches $0$:
+    $ lim_(x -> 0) -x^2 = 0 $
+    $ lim_(x -> 0) x^2 = 0 $
+
+    Since both limits are equal to $0$, by the Squeeze Theorem, we have :
+    $ lim_(x -> 0) x^2 * sin(1/x) = 0 $
+    #cartesian-canvas(
+      size: (8, 6),
+      x-domain: (-2, 2),
+      y-domain: (-15, 15),
+      x-tick: 1,
+      y-tick: 5,
+      show-grid: true,
+      graph(x => (x * x) / calc.sin(1/x), domain: (-2, 2), label: $y = x^2sin(1/x)$),
+    )
+  ]
+  
+]

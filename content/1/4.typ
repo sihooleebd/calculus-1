@@ -33,6 +33,20 @@ If these conditions are not met, we call the function is "discontinuous" at $x =
 
     Thus, the function is discontinuous at $x = 2$.
   ]
+
+  #cartesian-canvas(
+    size: (8, 5),
+    x-domain: (-1, 5),
+    y-domain: (-1, 6),
+    show-grid: true,
+    // f(x) = (x²-x-2)/(x-2) = x+1 for x ≠ 2
+    graph(x => x + 1, domain: (-1, 1.95), label: $f(x) = (x^2-x-2)/(x-2)$),
+    graph(x => x + 1, domain: (2.05, 5)),
+    // Show the hole at (2, 3) - use hollow point
+    point(2, 3, label: "(2, 3)", style: (fill: none)),
+    // Defined point at (2, 1)
+    point(2, 1, label: "f(2) = 1"),
+  )
 ]
 
 As we did with limits, we can define the left and right continuities for a function too.
@@ -74,6 +88,19 @@ Using this info, we can create the following definition :
                           & = 1 - 0 \
                           & = 1 = f(1) $. Thus, $f$ is left continuous at $x = 1$.
       Therefore, $f$ is continuous on the closed interval $[-1, 1]$.
+
+    #cartesian-canvas(
+      size: (8, 5),
+      x-domain: (-1.5, 1.5),
+      y-domain: (-0.5, 1.5),
+      show-grid: true,
+      // f(x) = 1 - sqrt(1 - x²) - this is a lower semicircle shifted up
+      graph(x => 1 - calc.sqrt(1 - calc.pow(x, 2)), domain: (-0.999, 0.999), label: $f(x) = 1 - sqrt(1-x^2)$),
+      // Mark the endpoints
+      point(-1, 1, label: $(-1, 1)$),
+      point(1, 1, label: $(1, 1)$),
+      point(0, 0, label: $(0, 0)$),
+    )
   ]
 ]
 

@@ -26,6 +26,20 @@
       ),
     )
     By the intuitive definition of the limit, we can see that as $x$ approaches $0$, $f(x)$ approaches $1$. Therefore, we can conclude that:
+    $ lim_(x -> 0) sin(x)/x = 1 $
+
+    #cartesian-canvas(
+      size: (8, 5),
+      x-domain: (-8, 8),
+      y-domain: (-0.5, 1.5),
+      show-grid: true,
+      // sin(x)/x - robust handles singularity at x=0
+      robust-func(x => calc.sin(x) / x, domain: (-8, 8), label: $sin(x)/x$),
+      // Horizontal line at y=1 showing the limit
+      func(x => 1, domain: (-8, 8), label: "y = 1", style: (stroke: gray)),
+      // Hollow point at (0, 1) showing the limit value
+      point(0, 1, label: $L$),
+    )
   ]
 ]
 
@@ -61,6 +75,20 @@
     By the intuitive definition of one-sided limits, we can see that as $x$ approaches $0$ from the left, $H(x)$ approaches $0$, and as $x$ approaches $0$ from the right, $H(x)$ approaches $1$. Therefore, we can conclude that:
     $ lim_(x -> 0^-) H(x) = 0 $
     $ lim_(x -> 0^+) H(x) = 1 $
+
+    #cartesian-canvas(
+      size: (8, 4),
+      x-domain: (-3, 3),
+      y-domain: (-0.5, 1.5),
+      show-grid: true,
+      // Heaviside: 0 for x < 0
+      graph(x => 0, domain: (-3, -0.01), label: $H(x)$),
+      // Heaviside: 1 for x >= 0
+      graph(x => 1, domain: (0.01, 3)),
+      // Show the jump discontinuity
+      point(0, 0, label: "", style: (fill: none)),
+      point(0, 1, label: ""),
+    )
   ]
 ]
 
@@ -80,6 +108,16 @@
     )
     By evaluating $sin(pi/x)$ at values of $x$ that get closer and closer to $0$, we can see that the function does not approach a single value. Instead, it oscillates between $-1$ and $1$. Therefore, we can conclude that:
     $ lim_(x -> 0) sin(pi/x) $ does not exist.
+
+    #cartesian-canvas(
+      size: (8, 4),
+      x-domain: (-1, 1),
+      y-domain: (-1.5, 1.5),
+      x-tick: 0.25,
+      show-grid: true,
+      // sin(π/x) - robust handles singularity at x=0
+      robust-func(x => calc.sin(calc.pi / x), domain: (-1, 1), label: $sin(pi/x)$),
+    )
   ]
 ]
 
@@ -98,7 +136,17 @@
     )
     By evaluating $1/x^2$ at values of $x$ that get closer and closer to $0$, we can see that the function grows without bound. Therefore, we can conclude that:
     $ lim_(x -> 0) (1/x^2) = infinity $
-    (which mathemtaically means that the limit does not exist in the real number system
+    (which mathematically means that the limit does not exist in the real number system)
+
+    #cartesian-canvas(
+      size: (8, 5),
+      x-domain: (-3, 3),
+      y-domain: (-1, 10),
+      show-grid: true,
+      // 1/x² - robust handles singularity at x=0
+      robust-func(x => 1 / calc.pow(x, 2), domain: (-3, 3), label: $1/x^2$),
+      // Vertical asymptote line at x=0
+      segment(point(0, -1), point(0, 10), style: (stroke: gray)),
     )
   ]
 ]
@@ -137,5 +185,21 @@
     $ lim_(x -> 3^-) (2x)/(x-3) = -infinity $
     Since both one-sided limits approach infinity (one positive, one negative),
     we can conclude that the function has a vertical asymptote at $x=3$.
+
+    #cartesian-canvas(
+      size: (8, 6),
+      x-domain: (-2, 8),
+      y-domain: (-15, 15),
+      x-tick: 1,
+      y-tick: 5,
+      show-grid: true,
+      // 2x/(x-3) - split at x=3 (asymptote) since robust-func only handles x=0 singularities
+      graph(x => (2 * x) / (x - 3), domain: (-2, 2.9), label: $y = (2x)/(x-3)$),
+      graph(x => (2 * x) / (x - 3), domain: (3.1, 8)),
+      // Vertical asymptote at x=3
+      segment(point(3, -15), point(3, 15), style: (stroke: gray)),
+      // Horizontal asymptote at y=2
+      func(x => 2, domain: (-2, 8), label: "y = 2", style: (stroke: gray)),
+    )
   ]
 ]
