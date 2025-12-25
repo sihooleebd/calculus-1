@@ -33,7 +33,7 @@
       x-domain: (-8, 8),
       y-domain: (-0.5, 1.5),
       show-grid: true,
-      // sin(x)/x - robust handles singularity at x=0
+      // sin(x)/x - singularity at x=0 handled automatically
       robust-func(x => calc.sin(x) / x, domain: (-8, 8), label: $sin(x)/x$),
       // Horizontal line at y=1 showing the limit
       func(x => 1, domain: (-8, 8), label: "y = 1", style: (stroke: gray)),
@@ -92,7 +92,7 @@
   ]
 ]
 
-- With the basic idea, we can now consider the bigger problem : can limits ***fail*** to exist?
+- With the basic idea, we can now consider the bigger problem : can limits *fail* to exist?
 #example("Uh Oh")[
   Investigate the following :  $ lim_(x -> 0) sin(pi/x) $
   #solution("")[
@@ -115,7 +115,7 @@
       y-domain: (-1.5, 1.5),
       x-tick: 0.25,
       show-grid: true,
-      // sin(π/x) - robust handles singularity at x=0
+      // sin(π/x) - singularity at x=0 handled automatically
       robust-func(x => calc.sin(calc.pi / x), domain: (-1, 1), label: $sin(pi/x)$),
     )
   ]

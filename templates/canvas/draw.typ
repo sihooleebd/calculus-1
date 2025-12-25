@@ -193,7 +193,7 @@
     content(
       coords,
       text(fill: theme.at("plot", default: (:)).at("stroke", default: black), format-label(obj, obj.label)),
-      anchor: "south-west",
+      anchor: "center",
       padding: 0.15,
     )
   }
@@ -506,29 +506,40 @@
   let style = get-line-style(obj, theme)
   let fill = get-fill-style(obj, theme)
 
+  // Apply theme color if fill is auto
+  let final-fill = if fill == auto {
+    theme.at("plot", default: (:)).at("highlight", default: black).transparentize(70%)
+  } else {
+    fill
+  }
+
   // Support 3D points
   let coords = obj.points.map(p => {
     if p.at("z", default: none) != none { (p.x, p.y, p.z) } else { (p.x, p.y) }
   })
 
-  line(..coords, close: true, stroke: style.stroke, fill: fill)
+  line(..coords, close: true, stroke: style.stroke, fill: final-fill)
 
   if obj.at("label", default: none) != none {
+    // Calculate horizontal center and find max y for label positioning
     let sum-x = obj.points.map(p => p.x).sum()
-    let sum-y = obj.points.map(p => p.y).sum()
-    let sum-z = obj.points.map(p => p.at("z", default: 0)).sum()
+    let max-y = calc.max(..obj.points.map(p => p.y))
     let n = obj.points.len()
 
-    let center = if obj.points.first().at("z", default: none) != none {
-      (sum-x / n, sum-y / n, sum-z / n)
+    let center-x = sum-x / n
+
+    let label-pos = if obj.points.first().at("z", default: none) != none {
+      let sum-z = obj.points.map(p => p.at("z", default: 0)).sum()
+      (center-x, max-y, sum-z / n)
     } else {
-      (sum-x / n, sum-y / n)
+      (center-x, max-y)
     }
 
     content(
-      center,
+      label-pos,
       text(fill: theme.plot.stroke, format-label(obj, obj.label)),
-      anchor: "center",
+      anchor: "south",
+      padding: 0.1,
     )
   }
 }
@@ -651,6 +662,37 @@
   } else {
     // Standard function
     plot.add(domain: obj.domain, samples: obj.samples, style: style, obj.f)
+  }
+
+  // Draw empty holes
+  if obj.at("hole", default: ()).len() > 0 {
+    let hole-pts = ()
+    for h in obj.hole {
+      // Evaluate f(h) approx (limit) since f(h) is likely undefined or 0/0
+      let y = (obj.f)(h + 0.0001)
+      hole-pts.push((h, y))
+    }
+    plot.annotate({
+      import cetz.draw: *
+      for p in hole-pts {
+        circle(p, radius: 0.08, fill: white, stroke: style.stroke)
+      }
+    })
+  }
+
+  // Draw filled holes
+  if obj.at("filled-hole", default: ()).len() > 0 {
+    let hole-pts = ()
+    for h in obj.at("filled-hole") {
+      let y = (obj.f)(h + 0.0001)
+      hole-pts.push((h, y))
+    }
+    plot.annotate({
+      import cetz.draw: *
+      for p in hole-pts {
+        circle(p, radius: 0.08, fill: stroke-col, stroke: style.stroke)
+      }
+    })
   }
 
   if obj.at("label", default: none) != none {

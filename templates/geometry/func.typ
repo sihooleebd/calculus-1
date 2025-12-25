@@ -87,21 +87,33 @@
     val == val and val != calc.inf and val != -calc.inf and calc.abs(val) < 1e10
   }
 
+  // Helper: Safely evaluate, handling division by zero gracefully
+  let safe-eval(f, x) = {
+    let eps = 1e-10
+    if calc.abs(x) < eps {
+      return none
+    }
+    let y = f(x)
+    if is-valid(y) { y } else { none }
+  }
+
   let points = ()
   let prev-y = none
   let in-segment = false
 
   for i in range(samples + 1) {
-    // Use tanh-based spacing to concentrate samples near center
+    // Use cubic spacing to concentrate samples near center
+    // u^3 is flat at 0, meaning small change in output for change in input -> high density
     let t = i / samples // 0 to 1
-    let s = (t - 0.5) * 6 // -3 to 3
-    let warped = (calc.tanh(s) + 1) / 2 // 0 to 1, dense near 0.5
+    let u = 2 * t - 1 // -1 to 1
+    let warped = u * u * u // -1 to 1, dense near 0
+    let t-warped = (warped + 1) / 2 // 0 to 1
 
     // Map to x-range with density near center
     let x = if center >= x-min and center <= x-max {
       // Warp around center
       let half-range = calc.max(center - x-min, x-max - center)
-      center + (warped - 0.5) * 2 * half-range
+      center + warped * half-range // Use raw warped (-1 to 1) directly scaled
     } else {
       x-min + t * (x-max - x-min)
     }
@@ -109,9 +121,9 @@
     // Clamp to domain
     if x < x-min or x > x-max { continue }
 
-    let y = f(x)
+    let y = safe-eval(f, x)
 
-    if is-valid(y) {
+    if y != none {
       let is-jump = if prev-y != none {
         calc.abs(y - prev-y) > 1.5
       } else { false }
@@ -126,6 +138,10 @@
     } else {
       if in-segment {
         points.push(none)
+        in-segment = false
+      }
+      prev-y = none
+    }
         in-segment = false
       }
       prev-y = none
@@ -170,12 +186,15 @@
   func-type: "standard",
   samples: 200,
   robust: false,
+  singularity: 0,
+  hole: (),
+  filled-hole: (),
   label: none,
   style: auto,
 ) = {
   // Compute cached points if robust mode
   let cached = if robust and func-type == "standard" {
-    robust-sample(f, domain.at(0), domain.at(1))
+    oscillation-sample(f, domain.at(0), domain.at(1), center: singularity)
   } else {
     none
   }
@@ -187,20 +206,31 @@
     func-type: func-type,
     samples: samples,
     robust: robust,
+    hole: hole,
+    filled-hole: filled-hole,
     label: label,
     style: style,
     cached-points: cached,
   )
 }
 
-/// Shorthand for a simple y = f(x) function
-#let graph(f, domain: (-5, 5), label: none, style: auto) = {
-  func(f, domain: domain, func-type: "standard", label: label, style: style)
+#let graph(f, domain: (-5, 5), hole: (), filled-hole: (), label: none, style: auto) = {
+  func(f, domain: domain, func-type: "standard", hole: hole, filled-hole: filled-hole, label: label, style: style)
 }
 
 /// Create a robust function (for singularities)
-#let robust-func(f, domain: (-5, 5), label: none, style: auto) = {
-  func(f, domain: domain, func-type: "standard", robust: true, label: label, style: style)
+#let robust-func(f, domain: (-5, 5), singularity: 0, hole: (), filled-hole: (), label: none, style: auto) = {
+  func(
+    f,
+    domain: domain,
+    func-type: "standard",
+    robust: true,
+    singularity: singularity,
+    hole: hole,
+    filled-hole: filled-hole,
+    label: label,
+    style: style,
+  )
 }
 
 /// Create a parametric curve

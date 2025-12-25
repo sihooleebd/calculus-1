@@ -40,13 +40,10 @@ If these conditions are not met, we call the function is "discontinuous" at $x =
     y-domain: (-1, 6),
     show-grid: true,
     // f(x) = (x²-x-2)/(x-2) = x+1 for x ≠ 2
-    graph(x => x + 1, domain: (-1, 1.95), label: $f(x) = (x^2-x-2)/(x-2)$),
-    // Show the hole at (2, 3) - use hollow point
-    point(2, 3, label: "(2, 3)", style: (fill: none)),
+    graph(x => x + 1, domain: (-1, 1.95), hole: (2,), label: $f(x) = (x^2-x-2)/(x-2)$),
 
     graph(x => x + 1, domain: (2.05, 5)),
     // Show the hole at (2, 3) - use hollow point
-    point(2, 3, label: "(2, 3)", style: (fill: none)),
     // Defined point at (2, 1)
     point(2, 1, label: "f(2) = 1"),
   )
