@@ -116,7 +116,7 @@
       x-tick: 0.25,
       show-grid: true,
       // sin(π/x) - singularity at x=0 handled automatically
-      robust-func(x => calc.sin(calc.pi / x), domain: (-1, 1), label: $sin(pi/x)$),
+      graph(x => calc.sin(calc.pi / x), domain: (-1, 1), adaptive: true, label: $sin(pi/x)$),
     )
   ]
 ]
@@ -143,8 +143,8 @@
       x-domain: (-3, 3),
       y-domain: (-1, 10),
       show-grid: true,
-      // 1/x² - robust handles singularity at x=0
-      robust-func(x => 1 / calc.pow(x, 2), domain: (-3, 3), label: $1/x^2$),
+      // 1/x² - adaptive graph handles singularity at x=0
+      graph(x => 1 / calc.pow(x, 2), domain: (-3, 3), label: $1/x^2$),
       // Vertical asymptote line at x=0
       segment(point(0, -1), point(0, 10), style: (stroke: gray)),
     )

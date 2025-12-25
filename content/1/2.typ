@@ -1,9 +1,9 @@
 #import "../../templates/templater.typ": *
-- Limits Have some rules that we must comply to. 
+- Limits Have some rules that we must comply to.
 #theorem("The Laws of Limits")[
   Suppose that $c$ i s a constant and the limits $lim_(x -> a) f(x)$ and $lim_(x -> a) g(x)$ exist. Then, the following properties hold:
   1. $lim_(x -> a) [f(x) + g(x)] = lim_(x -> a) f(x) + lim_(x -> a) g(x)$
-  2. $lim_(x -> a) [f(x) - g(x)] = lim_(x -> a) f(x) - lim_(x -> a) g(x)$   
+  2. $lim_(x -> a) [f(x) - g(x)] = lim_(x -> a) f(x) - lim_(x -> a) g(x)$
   3. $lim_(x -> a) [c * f(x)] = c * lim_(x -> a) f(x)$
   4. $lim_(x -> a) [f(x) * g(x)]
     = lim_(x -> a) f(x) * lim_(x -> a) g(x)$
@@ -11,7 +11,7 @@
     = (lim_(x -> a) f(x)) / (lim_(x -> a) g(x))$, provided that $lim_(x -> a) g(x) ≠ 0$
 ]
 
-Using these laws, we can derive a few more : 
+Using these laws, we can derive a few more :
 
 #theorem("The Power Law of Limits")[
   Suppose that $lim_(x -> a) f(x) = L$ and $n$ is a positive integer. Then,
@@ -32,17 +32,17 @@ also, some special limits :
 ]
 
 #example("Limit Law Basics")[
-  Evaluate $lim_(x -> 5) (2x^2 - 3x + 4)$. 
+  Evaluate $lim_(x -> 5) (2x^2 - 3x + 4)$.
   #solution("")[
-    $ lim_(x -> 5) (2x^2 - 3x + 4) = lim_(x -> 5) 2x^2 - lim_(x -> 5) 3x + lim_(x -> 5) 4 $ 
-    
+    $ lim_(x -> 5) (2x^2 - 3x + 4) = lim_(x -> 5) 2x^2 - lim_(x -> 5) 3x + lim_(x -> 5) 4 $
+
     ($because$ the Sum and Difference Law)
 
     $ = 2 * lim_(x -> 5) x^2 - 3 * lim_(x -> 5) x + 4 $
-    
+
     ($because$ the Constant Multiple Law)
     $ = 2 * 5^2 - 3 * 5 + 4 $
-    
+
     ($because$ the Power Law and Constant Function Law)
     $ = 50 - 15 + 4 = 39 $
   ]
@@ -67,7 +67,7 @@ Above, we have discussed that $lim_(x->a)x = a$. What if we generalize this into
   #solution("")[
     We cannot directly substitute $1$ into the function, since it would create a division by zero. However, we can simplify the expression first.
 
-    $ (x^2 - 1)/(x - 1) = ((x - 1)(x + 1))/(x - 1) = x + 1  because x ≠ 1 $.
+    $ (x^2 - 1)/(x - 1) = ((x - 1)(x + 1))/(x - 1) = x + 1 because x ≠ 1 $.
 
     Now we can find the limit:
 
@@ -75,7 +75,7 @@ Above, we have discussed that $lim_(x->a)x = a$. What if we generalize this into
   ]
 ]
 
-From the intuitive definition of left/right limits, we can know the following : 
+From the intuitive definition of left/right limits, we can know the following :
 #theorem("Relationship between One-Sided Limits and Two-Sided Limits")[
   Let $f(x)$ be defined whilst $x$ is near $a$. Then, $ lim_(x -> a) f(x) = L $ if and only if both $ lim_(x -> a^+) f(x) = L $ and $ lim_(x -> a^-) f(x) = L $
 ]
@@ -110,8 +110,8 @@ From the intuitive definition of left/right limits, we can know the following :
       x-tick: 1,
       y-tick: 5,
       show-grid: true,
-      graph(x => (x * x) / calc.sin(1/x), domain: (-2, 2), label: $y = x^2sin(1/x)$),
+      graph(x => (x * x) / calc.sin(1 / x), domain: (-2, 2), label: $y = x^2sin(1/x)$),
     )
   ]
-  
+
 ]
