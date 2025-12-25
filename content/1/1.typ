@@ -33,8 +33,8 @@
       x-domain: (-8, 8),
       y-domain: (-0.5, 1.5),
       show-grid: true,
-      // sin(x)/x - singularity at x=0 handled automatically
-      robust-func(x => calc.sin(x) / x, domain: (-8, 8), label: $sin(x)/x$),
+      // sin(x)/x - adaptive graph handles singularity at x=0
+      graph(x => calc.sin(x) / x, domain: (-8, 8), label: $sin(x)/x$),
       // Horizontal line at y=1 showing the limit
       func(x => 1, domain: (-8, 8), label: "y = 1", style: (stroke: gray)),
       // Hollow point at (0, 1) showing the limit value
@@ -193,7 +193,7 @@
       x-tick: 1,
       y-tick: 5,
       show-grid: true,
-      // 2x/(x-3) - split at x=3 (asymptote) since robust-func only handles x=0 singularities
+      // 2x/(x-3) - split at x=3 (asymptote)
       graph(x => (2 * x) / (x - 3), domain: (-2, 2.9), label: $y = (2x)/(x-3)$),
       graph(x => (2 * x) / (x - 3), domain: (3.1, 8)),
       // Vertical asymptote at x=3

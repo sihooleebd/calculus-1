@@ -73,7 +73,7 @@
 
             if t == "func" {
               // Functions need to be added via plot.add
-              draw-func-obj(obj, theme)
+              draw-func-obj(obj, theme, size: size, x-domain: x-domain, y-domain: y-domain)
             } else if t != none {
               // Other geometry objects are drawn via annotate
               let aspect = (x-domain, y-domain, size.at(0), size.at(1))
@@ -85,7 +85,7 @@
             // Handle arrays of objects
             for sub-obj in obj {
               if type(sub-obj) == dictionary and sub-obj.at("type", default: none) == "func" {
-                draw-func-obj(sub-obj, theme)
+                draw-func-obj(sub-obj, theme, size: size, x-domain: x-domain, y-domain: y-domain)
               } else if type(sub-obj) == dictionary {
                 let aspect = (x-domain, y-domain, size.at(0), size.at(1))
                 plot.annotate({

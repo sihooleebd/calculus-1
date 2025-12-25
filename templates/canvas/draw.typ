@@ -628,8 +628,12 @@
   }
 }
 
+#import "../geometry/func.typ": adaptive-sample
+
+// ... (existing imports)
+
 /// Draw a function using CeTZ plot
-#let draw-func-obj(obj, theme) = {
+#let draw-func-obj(obj, theme, size: (10, 10), x-domain: (-5, 5), y-domain: (-5, 5)) = {
   let stroke-col = if obj.style != auto and obj.style != none and "stroke" in obj.style {
     obj.style.stroke
   } else {
@@ -638,10 +642,23 @@
 
   let style = (stroke: stroke-col)
 
-  if obj.robust and obj.cached-points != none {
-    // Split cached points at break markers (none values) and render segments
+  // Use adaptive sampling if robust mode is enabled AND function is standard
+  if obj.robust and obj.func-type == "standard" {
+    // Generate points on the fly using screen dimensions
+    let points = adaptive-sample(
+      obj.f,
+      obj.domain.at(0),
+      obj.domain.at(1),
+      y-min: y-domain.at(0),
+      y-max: y-domain.at(1),
+      width: size.at(0),
+      height: size.at(1),
+      samples: obj.samples,
+    )
+
+    // Split points at break markers (none values) and render segments
     let segment = ()
-    for pt in obj.cached-points {
+    for pt in points {
       if pt == none {
         // Break marker - render current segment if non-empty
         if segment.len() >= 2 {
@@ -660,7 +677,7 @@
     // Parametric curve
     plot.add(domain: obj.domain, samples: obj.samples, style: style, obj.f)
   } else {
-    // Standard function
+    // Standard function (non-adaptive)
     plot.add(domain: obj.domain, samples: obj.samples, style: style, obj.f)
   }
 
