@@ -1,6 +1,5 @@
 # Build artifacts
 templates/build/
-output.pdf
 content/**/*.pdf
 *.zip
 .build_settings.json
