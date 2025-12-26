@@ -1,6 +1,8 @@
 # Build artifacts
 templates/build/
 content/**/*.pdf
+
+
 *.zip
 .build_settings.json
 
@@ -11,25 +13,33 @@ content/**/*.pdf
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+.python-version
+.venv/
+venv/
+ENV/
+env/
 
 # OS
 .DS_Store
 Thumbs.db
+.AppleDouble
+.LSOverride
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
 # Temporary files
 *.tmp
 *.log
 extract_hierarchy.typ
 
-*/systemconfig/*
+# Config and System
+templates/systemconfig/
 
 # Exports
 exports/
-
-tests/
