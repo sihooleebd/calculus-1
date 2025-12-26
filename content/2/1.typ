@@ -138,3 +138,4 @@ Derivatives can also be used to find the rate of change of one quantity with res
     Thus, the car's velocity at time $t = 4$ seconds is $26$ units per second.
   ]
 ]
+
