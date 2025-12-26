@@ -1,22 +1,36 @@
+# Build artifacts
+templates/build/
+output.pdf
+content/**/*.pdf
+*.zip
+.build_settings.json
+
+# Typst cache
+.typst-cache/
+
 # Python
 __pycache__/
-*.py[cod]
-*.so
 *.pyc
+*.pyo
 
-# PDFs
-*.pdf
-!output.pdf
-
-# System
+# OS
 .DS_Store
-.AppleDouble
-.LSOverride
+Thumbs.db
 
-# Editor
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Project specific
-templates/systemconfig/
+# Temporary files
+*.tmp
 *.log
+extract_hierarchy.typ
+
+*/systemconfig/*
+
+# Exports
+exports/
+
+tests/
