@@ -148,3 +148,57 @@ You may have noticed that we didnt even care about continuity during polynomials
     2. Let $R(x) = P(x)/Q(x)$ be a rational function, where $P(x)$ and $Q(x)$ are polynomial functions. Since both $P(x)$ and $Q(x)$ are continuous everywhere (from part 1), and provided that $Q(a) eq.not 0$, by the Properties of Continuous Functions theorem, $R(x)$ is continuous at every point in its domain.
   ]
 ]
+
+
+#example("Continuity of a Rational Function")[
+  Find $lim_(x->-2) (x^3 + 2x^2 - 1)/(5 - 3x)$. 
+  #solution("")[
+    Since the function is a rational function and $2$ is in the domain of the function, we can use the Continuity of Rational Functions theorem.
+
+    $lim_(x->-2) (x^3 + 2x^2 - 1)/(5 - 3x) = (-2^3 + 2*(-2)^2 - 1)/(5 - 3*(-2)) = (-8 + 8 - 1)/(5 + 6) = -1/11$
+    #cartesian-canvas(
+      size: (8, 5),
+      x-domain: (-3, 1),
+      y-domain: (-0.25, 0.25),
+      show-grid: true,
+      // f(x) = (x^3 + 2x^2 - 1)/(5 - 3x)
+      graph(x => (calc.pow(x, 3) + 2 * calc.pow(x, 2) - 1) / (5 - 3 * x), domain: (-3, 1), label: $f(x) = (x^3 + 2x^2 - 1)/(5 - 3x)$),
+      // Mark the point at (-2, -1/11)
+      point(-2, -1/11, label: $(-2, -1/11)$),
+    )
+  ]
+]
+
+= Intermediate Value Theorem
+The Intermediate Value Theorem is a very useful theorem that utilizes the property of continuous functions.
+#theorem("Intermediate Value Theorem")[
+  Let $f$ be a function that is continuous on the closed interval $[a, b]$, and let $N$ be any number between $f(a)$ and $f(b)$, where $f(a) eq.not f(b)$. Then, there exists at least one number $c$ in the open interval $(a, b)$ such that $f(c) = N$.
+  #proof("")[
+    Since $f$ is continuous on the closed interval $[a, b]$, by the definition of continuity, for every $x$ in $[a, b]$, $f(x)$ takes on every value between $f(a)$ and $f(b)$. Therefore, for any number $N$ between $f(a)$ and $f(b)$, there must exist at least one number $c$ in the open interval $(a, b)$ such that $f(c) = N$.
+  ]
+]
+
+#example("Intermediate Value Theorem Example")[
+  Show that the equation $x^3 + x - 1 = 0$ has a solution in the interval $[0, 1]$.
+  #solution("")[
+    Let $f(x) = x^3 + x - 1$. We need to show that there exists a number $c$ in the interval $(0, 1)$ such that $f(c) = 0$.
+    First, we check the values of $f$ at the endpoints of the interval:
+    $f(0) = 0^3 + 0 - 1 = -1$
+    $f(1) = 1^3 + 1 - 1 = 1$
+    Since $f(0) = -1$ and $f(1) = 1$, and $0$ is between $-1$ and $1$, by the Intermediate Value Theorem, there exists at least one number $c$ in the interval $(0, 1)$ such that $f(c) = 0$.
+    Therefore, the equation $x^3 + x - 1 = 0$ has a solution in the interval $[0, 1]$.  
+    #cartesian-canvas(
+      size: (8, 5),
+      x-domain: (-0.5, 1.5),
+      y-domain: (-1.5, 1.5),
+      show-grid: true,
+      // f(x) = x^3 + x - 1
+      graph(x => calc.pow(x, 3) + x - 1, domain: (-0.5, 1.5), label: $f(x) = x^3 + x - 1$),
+      // Mark the points at (0, -1) and (1, 1)
+      point(0, -1, label: $(0, -1)$),
+      point(1, 1, label: $(1, 1)$),
+      point(0.6823, 0, label: $(c, 0)$),  
+    )
+  ]
+
+]

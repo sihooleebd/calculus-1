@@ -68,7 +68,12 @@
     // Strict CCW difference
     let diff = calc.rem(end-deg - start-deg + 360, 360)
     // Handle reflex override
-    if obj.at("reflex", default: false) { diff = 360 - diff }
+    let is-reflex = obj.at("reflex", default: "auto")
+    if is-reflex == "auto" {
+      if diff > 180 { diff = 360 - diff }
+    } else if is-reflex {
+      diff = 360 - diff
+    }
 
     // Round to reasonable decimals (e.g. integer if close)
     let val = if calc.abs(diff - calc.round(diff)) < 0.001 {
@@ -164,40 +169,44 @@
   let style = get-point-style(obj, theme)
   let coords = if obj.at("z", default: none) != none { (obj.x, obj.y, obj.z) } else { (obj.x, obj.y) }
 
-  // Calculate aspect-corrected radii to render as true circles on screen
-  // When aspect ratio is non-square, we draw an ellipse in plot coords
-  // that appears as a circle on screen
-  let (rx, ry) = if aspect != none {
-    let (x-range, y-range, width, height) = aspect
-    let x-units-per-pt = (x-range.at(1) - x-range.at(0)) / width
-    let y-units-per-pt = (y-range.at(1) - y-range.at(0)) / height
-    // Convert screen radius to plot units for each axis
-    let base-r = style.radius
-    (base-r * x-units-per-pt, base-r * y-units-per-pt)
+  // 3D Point: Use line with round cap to ensure spherical look (billboard)
+  if obj.at("z", default: none) != none {
+    let pt-radius = 5pt
+    line(coords, coords, stroke: (cap: "round", thickness: pt-radius, paint: style.fill))
   } else {
-    (style.radius, style.radius)
-  }
-
-  // Always draw ellipse with compensated radii (appears as circle on screen)
-  if rx == ry or aspect == none {
-    circle(coords, radius: style.radius, fill: style.fill, stroke: style.stroke)
-  } else {
-    // Draw ellipse in plot coordinates that appears circular on screen
-    let steps = 32
-    let pts = ()
-    for i in range(steps) {
-      let a = i / steps * 360deg
-      pts.push((coords.at(0) + rx * calc.cos(a), coords.at(1) + ry * calc.sin(a)))
+    // 2D Point: Calculate aspect-corrected radii to render as true circles on screen
+    let (rx, ry) = if aspect != none {
+      let (x-range, y-range, width, height) = aspect
+      let x-units-per-pt = (x-range.at(1) - x-range.at(0)) / width
+      let y-units-per-pt = (y-range.at(1) - y-range.at(0)) / height
+      // Convert screen radius to plot units for each axis
+      let base-r = style.radius
+      (base-r * x-units-per-pt, base-r * y-units-per-pt)
+    } else {
+      (style.radius, style.radius)
     }
-    line(..pts, close: true, fill: style.fill, stroke: style.stroke)
+
+    // Always draw ellipse with compensated radii (appears as circle on screen)
+    if rx == ry or aspect == none {
+      circle(coords, radius: style.radius, fill: style.fill, stroke: style.stroke)
+    } else {
+      // Draw ellipse in plot coordinates that appears circular on screen
+      let steps = 32
+      let pts = ()
+      for i in range(steps) {
+        let a = i / steps * 360deg
+        pts.push((coords.at(0) + rx * calc.cos(a), coords.at(1) + ry * calc.sin(a)))
+      }
+      line(..pts, close: true, fill: style.fill, stroke: style.stroke)
+    }
   }
 
   if obj.label != none {
     content(
       coords,
       text(fill: theme.at("plot", default: (:)).at("stroke", default: black), format-label(obj, obj.label)),
-      anchor: "center",
-      padding: 0.15,
+      anchor: "south",
+      padding: 0.2,
     )
   }
 }
@@ -433,7 +442,7 @@
   let diff = calc.rem(end-deg - start-deg + 360, 360)
 
   // Handle reflex override
-  let is-reflex = obj.at("reflex", default: false)
+  let is-reflex = obj.at("reflex", default: "auto")
   if is-reflex == "auto" {
     if diff > 180 {
       diff = 360 - diff
@@ -524,25 +533,22 @@
   line(..coords, close: true, stroke: style.stroke, fill: final-fill)
 
   if obj.at("label", default: none) != none {
-    // Calculate horizontal center and find max y for label positioning
-    let sum-x = obj.points.map(p => p.x).sum()
+    // Calculate top-right position for label
+    let max-x = calc.max(..obj.points.map(p => p.x))
     let max-y = calc.max(..obj.points.map(p => p.y))
-    let n = obj.points.len()
-
-    let center-x = sum-x / n
 
     let label-pos = if obj.points.first().at("z", default: none) != none {
-      let sum-z = obj.points.map(p => p.at("z", default: 0)).sum()
-      (center-x, max-y, sum-z / n)
+      let max-z = calc.max(..obj.points.map(p => p.at("z", default: 0)))
+      (max-x, max-y, max-z)
     } else {
-      (center-x, max-y)
+      (max-x, max-y)
     }
 
     content(
       label-pos,
       text(fill: theme.plot.stroke, format-label(obj, obj.label)),
-      anchor: "south",
-      padding: 0.1,
+      anchor: "south-west",
+      padding: 0.15,
     )
   }
 }
@@ -645,6 +651,99 @@
   }
 }
 
+
+/// Draw vector projection (specialized rendering with helplines)
+#let draw-vector-projection-obj(obj, theme, origin: (0, 0)) = {
+  import cetz.draw: *
+
+  let hl-col = theme.at("plot", default: (:)).at("highlight", default: blue)
+  let accent-col = theme.at("text-accent", default: purple)
+
+  // Use bound origin from object or passed origin
+  let start = obj.at("origin", default: origin)
+  let sx = if type(start) == dictionary { start.x } else { start.at(0) }
+  let sy = if type(start) == dictionary { start.y } else { start.at(1) }
+
+  let vec-a = obj.v1
+  let vec-b = obj.v2
+  let proj = obj // The object itself is the projected vector
+
+  let a-end = (sx + vec-a.x, sy + vec-a.y)
+  let proj-end = (sx + proj.x, sy + proj.y)
+
+  // Draw helplines if enabled
+  if obj.at("helplines", default: true) {
+    // Extended b axis
+    let b-scale = 1.3
+    line(
+      (sx - vec-b.x * 0.2, sy - vec-b.y * 0.2),
+      (sx + vec-b.x * b-scale, sy + vec-b.y * b-scale),
+      stroke: (paint: gray, thickness: 1.5pt, dash: "dotted"),
+    )
+
+    // Perpendicular from a to projection
+    // Use gray to match addition helplines style standard
+    line(a-end, proj-end, stroke: (paint: gray, thickness: 1.5pt, dash: "dotted"))
+
+    // Right angle marker
+    // Construct simplified point objects for the drawer
+    let p-a = (x: a-end.at(0), y: a-end.at(1))
+    let p-proj = (x: proj-end.at(0), y: proj-end.at(1))
+    let p-start = (x: start.at(0), y: start.at(1)) // Or origin?
+
+    // Draw directly using the helper
+    draw-right-angle-marker(
+      (
+        type: "right-angle",
+        p1: p-a,
+        vertex: p-proj,
+        p2: p-start,
+        radius: 0.3,
+      ),
+      theme,
+    )
+  }
+
+  // Original vectors (draw them recursively as standard vectors)
+  draw-vector-obj(vec-a + (origin: start), theme)
+  draw-vector-obj(vec-b + (origin: start), theme)
+
+  // Projection vector (the object itself)
+  draw-vector-obj(obj + (style: (stroke: hl-col)), theme, origin: start)
+}
+
+/// Draw vector addition (specialized rendering with parallelogram)
+#let draw-vector-addition-obj(obj, theme, origin: (0, 0)) = {
+  import cetz.draw: *
+
+  let hl-col = theme.at("plot", default: (:)).at("highlight", default: blue)
+
+  let start = obj.at("origin", default: origin)
+  let sx = if type(start) == dictionary { start.x } else { start.at(0) }
+  let sy = if type(start) == dictionary { start.y } else { start.at(1) }
+
+  let v1 = obj.v1
+  let v2 = obj.v2
+  let sum = obj
+
+  let v1-end = (sx + v1.x, sy + v1.y)
+  let v2-end = (sx + v2.x, sy + v2.y)
+  let sum-end = (sx + sum.x, sy + sum.y)
+
+  // Draw original vectors
+  draw-vector-obj(v1 + (origin: start), theme)
+  draw-vector-obj(v2 + (origin: start), theme)
+
+  if obj.at("helplines", default: true) {
+    // Parallelogram sides - Dotted and same strength
+    line(v1-end, sum-end, stroke: (paint: gray, thickness: 1.5pt, dash: "dotted"))
+    line(v2-end, sum-end, stroke: (paint: gray, thickness: 1.5pt, dash: "dotted"))
+  }
+
+  // Resultant
+  draw-vector-obj(obj + (style: (stroke: hl-col)), theme, origin: start)
+}
+
 /// Draw a function using CeTZ plot
 /// For robust/adaptive functions, uses adaptive sampling algorithm
 #let draw-func-obj(obj, theme, x-domain: auto, y-domain: auto, size: (10, 10)) = {
@@ -737,46 +836,24 @@
   }
 
   if obj.at("label", default: none) != none {
-    // Place label at a point ~75% along the domain (visible, not at edge)
-    let t-label = obj.domain.at(0) + 0.75 * (obj.domain.at(1) - obj.domain.at(0))
+    // Place label at the end of the domain (right side)
+    let t-end = obj.domain.at(1)
 
     let pt = if obj.func-type == "standard" {
-      (t-label, (obj.f)(t-label))
+      (t-end, (obj.f)(t-end))
     } else {
-      // Parametric/Polar: f(t) returns (x, y) or r
-      (obj.f)(t-label)
+      (obj.f)(t-end)
     }
 
-    // Calculate tangent for perpendicular offset
-    let eps = 0.01
-    let t-next = t-label + eps
-    let pt-next = if obj.func-type == "standard" {
-      (t-next, (obj.f)(t-next))
-    } else {
-      (obj.f)(t-next)
-    }
-
-    // Tangent direction
-    let dx = pt-next.at(0) - pt.at(0)
-    let dy = pt-next.at(1) - pt.at(1)
-    let len = calc.sqrt(dx * dx + dy * dy)
-
-    // Perpendicular offset (small, alongside curve)
-    let offset = 0.15
-    let label-pt = if len > 0.0001 {
-      let nx = -dy / len
-      let ny = dx / len
-      (pt.at(0) + nx * offset, pt.at(1) + ny * offset)
-    } else {
-      (pt.at(0), pt.at(1) + offset)
-    }
+    // Offset slightly to the right
+    let label-pt = (pt.at(0) + 0.2, pt.at(1))
 
     plot.annotate({
       import cetz.draw: *
       content(
         label-pt,
         text(fill: stroke-col, format-label(obj, obj.label)),
-        anchor: "center",
+        anchor: "west",
         padding: 0.05,
         fill: white,
         stroke: none,
@@ -785,8 +862,89 @@
   }
 }
 
+/// Clip a line segment (p1, p2) to the rectangle defined by bounds (x-min, x-max, y-min, y-max)
+/// Returns array of segments (usually 0 or 1 segment: ((x1, y1), (x2, y2)))
+#let clip-segment(p1, p2, bounds) = {
+  let (x-min, x-max) = bounds.x
+  let (y-min, y-max) = bounds.y
+
+  let x1 = p1.at(0)
+  let y1 = p1.at(1)
+  let x2 = p2.at(0)
+  let y2 = p2.at(1)
+
+  // Cohen-Sutherland Line Clipping
+  let INSIDE = 0
+  let LEFT = 1
+  let RIGHT = 2
+  let BOTTOM = 4
+  let TOP = 8
+
+  let compute-out-code = (x, y) => {
+    let code = INSIDE
+    if x < x-min { code = code + LEFT } else if x > x-max { code = code + RIGHT }
+    if y < y-min { code = code + BOTTOM } else if y > y-max { code = code + TOP }
+    code
+  }
+
+  let code1 = compute-out-code(x1, y1)
+  let code2 = compute-out-code(x2, y2)
+  let accept = false
+
+  let max-iter = 10 // Safety break
+  let iter = 0
+
+  while iter < max-iter {
+    if (code1.bit-and(code2) != 0) {
+      // Both points outside same region -> reject
+      return ()
+    } else if (code1.bit-or(code2) == 0) {
+      // Both points inside -> accept
+      accept = true
+      break
+    } else {
+      // At least one point outside
+      let code-out = if code1 != 0 { code1 } else { code2 }
+      let x = 0.0
+      let y = 0.0
+
+      // Find intersection point
+      if (code-out.bit-and(TOP) != 0) {
+        x = x1 + (x2 - x1) * (y-max - y1) / (y2 - y1)
+        y = y-max
+      } else if (code-out.bit-and(BOTTOM) != 0) {
+        x = x1 + (x2 - x1) * (y-min - y1) / (y2 - y1)
+        y = y-min
+      } else if (code-out.bit-and(RIGHT) != 0) {
+        y = y1 + (y2 - y1) * (x-max - x1) / (x2 - x1)
+        x = x-max
+      } else if (code-out.bit-and(LEFT) != 0) {
+        y = y1 + (y2 - y1) * (x-min - x1) / (x2 - x1)
+        x = x-min
+      }
+
+      if code-out == code1 {
+        x1 = x
+        y1 = y
+        code1 = compute-out-code(x1, y1)
+      } else {
+        x2 = x
+        y2 = y
+        code2 = compute-out-code(x2, y2)
+      }
+    }
+    iter += 1
+  }
+
+  if accept {
+    (((x1, y1), (x2, y2)),)
+  } else {
+    ()
+  }
+}
+
 /// Draw a data series (scatter plot, line plot, or both)
-#let draw-data-series-obj(obj, theme) = {
+#let draw-data-series-obj(obj, theme, x-domain: auto, y-domain: auto) = {
   let stroke-col = if obj.style != auto and obj.style != none and "stroke" in obj.style {
     obj.style.stroke
   } else {
@@ -808,38 +966,122 @@
   let plot-type = obj.at("plot-type", default: "scatter")
   let data = obj.data
 
+  let bounds = if x-domain != auto and y-domain != auto {
+    (x: x-domain, y: y-domain)
+  } else {
+    none
+  }
+
   // Draw line if plot-type is "line" or "both"
   if plot-type == "line" or plot-type == "both" {
     if data.len() >= 2 {
-      plot.add(data, style: (stroke: stroke-col), mark: none)
+      if bounds == none {
+        // Standard drawing (no manual clipping)
+        plot.add(data, style: (stroke: stroke-col), mark: none)
+      } else {
+        // Manual clipping + Multiple Segments
+        let segments = ()
+        let current-segment = ()
+
+        for i in range(data.len() - 1) {
+          let p1 = data.at(i)
+          let p2 = data.at(i + 1)
+
+          let result = clip-segment(p1, p2, bounds)
+          if result.len() > 0 {
+            // We have a visible segment
+            let seg = result.first()
+
+            // If current segment is empty, start it
+            if current-segment.len() == 0 {
+              current-segment.push(seg.at(0))
+              current-segment.push(seg.at(1))
+            } else {
+              // Check continuity with previous point
+              let last-pt = current-segment.last()
+              let new-start = seg.at(0)
+
+              // Basic float equality check
+              let dist_sq = calc.pow(last-pt.at(0) - new-start.at(0), 2) + calc.pow(last-pt.at(1) - new-start.at(1), 2)
+
+              if dist_sq < 0.000001 {
+                // Continuous, append end point
+                current-segment.push(seg.at(1))
+              } else {
+                // Gap detected (clipped part), flush current and start new
+                plot.add(current-segment, style: (stroke: stroke-col), mark: none)
+                current-segment = (seg.at(0), seg.at(1))
+              }
+            }
+          }
+        }
+
+        // Flush final segment
+        if current-segment.len() >= 2 {
+          plot.add(current-segment, style: (stroke: stroke-col), mark: none)
+        }
+      }
     }
   }
 
   // Draw points if plot-type is "scatter" or "both"
-  // Use plot.add with mark style for proper circular markers regardless of aspect ratio
   if plot-type == "scatter" or plot-type == "both" {
-    plot.add(
-      data,
-      style: (stroke: none),
-      mark: "o",
-      mark-style: (fill: fill-col, stroke: none),
-      mark-size: marker-size * 2,
-    )
+    let pts-to-draw = if bounds != none {
+      data.filter(pt => {
+        let (x, y) = pt
+        x >= bounds.x.at(0) and x <= bounds.x.at(1) and y >= bounds.y.at(0) and y <= bounds.y.at(1)
+      })
+    } else {
+      data
+    }
+
+    if pts-to-draw.len() > 0 {
+      plot.add(
+        pts-to-draw,
+        style: (stroke: none),
+        mark: "o",
+        mark-style: (fill: fill-col, stroke: none),
+        mark-size: marker-size * 2,
+      )
+    }
   }
 
   // Draw label if present
   if obj.at("label", default: none) != none and data.len() > 0 {
-    // Place label near the last point
-    let last-pt = data.at(data.len() - 1)
-    plot.annotate({
-      import cetz.draw: *
-      content(
-        (last-pt.at(0) + 0.3, last-pt.at(1)),
-        text(fill: stroke-col, obj.label),
-        anchor: "west",
-        padding: 0.05,
-      )
-    })
+    // Place label near the last VISIBLE point
+    let last-pt = none
+
+    if bounds != none {
+      // Find last point inside bounds
+      for i in range(data.len() - 1, -1, step: -1) {
+        let pt = data.at(i)
+        if (
+          pt.at(0) >= bounds.x.at(0)
+            and pt.at(0) <= bounds.x.at(1)
+            and pt.at(1) >= bounds.y.at(0)
+            and pt.at(1) <= bounds.y.at(1)
+        ) {
+          last-pt = pt
+          break
+        }
+      }
+      // If no points inside but we have lines, maybe label intersection?
+      // For now, simpliest is last visible point.
+    } else {
+      last-pt = data.last()
+    }
+
+    if last-pt != none {
+      plot.annotate({
+        import cetz.draw: *
+        content(
+          (last-pt.at(0) + 0.3, last-pt.at(1)),
+          text(fill: stroke-col, obj.label),
+          anchor: "west",
+          padding: 0.05,
+        )
+      })
+    }
   }
 }
 
@@ -868,16 +1110,20 @@
     draw-right-angle-marker(obj, theme)
   } else if t == "polygon" { draw-polygon-obj(obj, theme) } else if t == "vector" {
     draw-vector-obj(obj, theme, origin: origin)
+  } else if t == "vector-projection" {
+    draw-vector-projection-obj(obj, theme, origin: origin)
+  } else if t == "vector-addition" {
+    draw-vector-addition-obj(obj, theme, origin: origin)
   }
   // Note: func and data-series objects are handled separately in plot context
 }
 
 /// Draw function for use in plot context (handles func and data-series)
-#let draw-plot-obj(obj, theme) = {
+#let draw-plot-obj(obj, theme, x-domain: auto, y-domain: auto) = {
   let t = obj.at("type", default: none)
   if t == "func" {
     draw-func-obj(obj, theme)
   } else if t == "data-series" {
-    draw-data-series-obj(obj, theme)
+    draw-data-series-obj(obj, theme, x-domain: x-domain, y-domain: y-domain)
   }
 }

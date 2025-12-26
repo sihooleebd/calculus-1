@@ -1,9 +1,8 @@
 import curses
 import json
 from ..base import TUI
-from ...config import CONFIG_FILE, LOGO
-from ...config import CONFIG_FILE, LOGO
-from ...utils import load_config_safe, register_key, handle_key_event
+from ...config import METADATA_FILE, CONSTANTS_FILE, LOGO
+from ...utils import load_config_safe, save_config, register_key, handle_key_event
 from ..editors.schemes import extract_themes
 from ..keybinds import KeyBind, NavigationBind, ConfirmBind
 
@@ -18,8 +17,18 @@ class InitWizard:
         self.choice_index = 0
         self.input_y = 0
         self.input_x = 0
+        self.input_y = 0
+        self.input_x = 0
         input_w = 50
         TUI.init_colors()
+
+        # Load existing config to preserve values
+        try:
+            current = load_config_safe()
+            if current:
+                self.config.update(current)
+        except:
+            pass
         
         self.keymap = {}
         
@@ -214,8 +223,7 @@ class InitWizard:
                 return None
                 
         try:
-            CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
-            CONFIG_FILE.write_text(json.dumps(self.config, indent=4))
-            return True
+            METADATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+            return save_config(self.config)
         except:
             return None

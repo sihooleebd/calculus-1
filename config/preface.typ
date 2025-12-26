@@ -1,4 +1,4 @@
-#import "../setup.typ": active-theme
+#import "../templates/setup.typ": active-theme
 
 Welcome to *Calculus I*, a rigorous journey into the mathematics of change and motion that forms the backbone of modern scientific analysis.
 

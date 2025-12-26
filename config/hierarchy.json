@@ -4,37 +4,44 @@
         "summary": "This section bridges the gap between static pre-calculus mathematics and the dynamic nature of calculus by addressing two fundamental problems: determining the slope of a tangent line to a curve and calculating the instantaneous velocity of a moving object. Both problems are solved using the same limiting process, where approximations\u2014such as the slopes of secant lines or average velocities over shrinking time intervals\u2014converge to a single, precise value. This concept of the \"limit\" serves as the foundation for the entire course, establishing the mathematical tools necessary to analyze instantaneous rates of change.",
         "pages": [
             {
-                "title": "Preview of Calculus",
-                "number": 1
+                "title": "Preview of Calculus"
             }
-        ],
-        "number": 0
+        ]
     },
     {
         "title": "Functions and Limits",
         "summary": "This chapter formalizes the concept of the limit, moving from intuitive approximations to rigorous mathematical definitions including the precise Epsilon-Delta definition. It provides the algebraic rules (Limit Laws) necessary to calculate limits without graphing, methods for handling indeterminate forms, and defines continuity to describe functions without breaks or holes. These concepts culminate in the Intermediate Value Theorem, a powerful tool used to prove the existence of roots and solutions within specific intervals, setting the stage for the definition of the derivative.",
         "pages": [
             {
-                "title": "The Tangent & Speed Problem",
-                "number": 4
+                "title": "The Tangent & Speed Problem"
             },
             {
-                "title": "The Limit of a Function",
-                "number": 5
+                "title": "The Limit of a Function"
             },
             {
-                "title": "Calculating Limits using the Limit Laws",
-                "number": 6
+                "title": "Calculating Limits using the Limit Laws"
             },
             {
-                "title": "The Precise Definition of a Limit",
-                "number": 7
+                "title": "The Precise Definition of a Limit"
             },
             {
-                "title": "Continuity",
-                "number": 8
+                "title": "Continuity"
             }
-        ],
-        "number": 1
+        ]
+    },
+    {
+        "title": "Derivatives",
+        "summary": "",
+        "pages": [
+            {
+                "title": "Derivatives and Rates of Change"
+            },
+            {
+                "title": "The Derivative as a Function"
+            },
+            {
+                "title": "Differentiation Formulas"
+            }
+        ]
     }
 ]
