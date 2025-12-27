@@ -95,4 +95,5 @@ We have noted earlier that if $f$ is differentiable at $x = a$, a limit at that 
   ]
 ]
 = Higher Derivatives. 
-Till now, we only dealt with the first derivative of a function. However, we can take derivatives of derivatives, leading to higher-order derivatives. The second derivative, denoted as $f''(x)$ or $(d^2 y)/(d x)^2$, represents the rate of change of the first derivative and provides information about the concavity
+Till now, we only dealt with the first derivative of a function. However, we can take derivatives of derivatives, leading to higher-order derivatives. The second derivative, denoted as $f''(x)$ or $(d^2 y)/(d x)^2$, represents the rate of change of the first derivative and provides information about the concavity of the function. Similarly, the third derivative, denoted as $f'''(x)$ or $(d^3 y)/(d x)^3$, represents the rate of change of the second derivative.
+
