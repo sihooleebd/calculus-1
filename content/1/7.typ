@@ -21,16 +21,16 @@
   If $norm(x-3)>0$, then $x eq.not 3$, so we can simplify the problem into the following :
   - "How close to $3$ does $x$ need to be, so that $f(x)$ is within $0.1$ of $5$, given that $x eq.not 3$
   $ norm(f(x)-5) < 0.1 "    if    " 0<norm(x-3)<delta $
-
+  
   *Here, we call $0.1$ the "Error Tolerance"*. Since we are going to send this to 0, let us replace this with $epsilon$ for the time being. So the question becomes :
   $ norm(f(x)-5) < epsilon "    if    " 0<norm(x-3)<delta $
-
+  
   Now, we finally have the tools to define the limit of a function more "precisely".
 
 #definition("Precise Definition of a Limit")[
   Let $f$ be a function defined on an open interval containing $a$, except possibly at $a$ itself. We say that $lim_(x -> a) f(x) = L$ if for every $epsilon > 0$, there exists a $delta > 0$ such that
   $ norm(f(x)-L) < epsilon "    if    " 0<norm(x-a)<delta $
-
+  
   To simplify even more, we can write like this(in style):
   $ forall epsilon > 0, exists delta > 0, "s.t." 0<norm(x-a)<delta arrow.r.long.double norm(f(x)-L) < epsilon $
 ]
@@ -39,14 +39,14 @@ Since we have to divide them later anyway, we can do it now :
 #definition("Precise definition of a left-hand limit")[
   Let $f$ be a function defined on an open interval containing $a$, except possibly at $a$ itself. We say that $lim_(x -> a^-) f(x) = L$ if for every $epsilon > 0$, there exists a $delta > 0$ such that
   $ norm(f(x)-L) < epsilon "    if    " a - delta < x < a $
-
+  
   To simplify even more, we can write like this:
   $ forall epsilon > 0, exists delta > 0, "s.t." a - delta < x < a arrow.r.long.double norm(f(x)-L) < epsilon $
 ]
 #definition("Precise definition of a right-hand limit")[
   Let $f$ be a function defined on an open interval containing $a$, except possibly at $a$ itself. We say that $lim_(x -> a^+) f(x) = L$ if for every $epsilon > 0$, there exists a $delta > 0$ such that
   $ norm(f(x)-L) < epsilon "    if    " a < x < a + delta $
-
+  
   To simplify even more, we can write like this:
   $ forall epsilon > 0, exists delta > 0, "s.t." a < x < a + delta arrow.r.long.double norm(f(x)-L) < epsilon $
 ]
@@ -63,21 +63,21 @@ Now lets utilize this to solve some problems.
   #solution("")[
     Let $epsilon > 0$ be given. We need to find a $delta > 0$ such that
     $ norm((4x - 5) - 7) < epsilon "    if    " 0<norm(x-3)<delta $
-
+    
     1. Preliminary Analysis :
     Simplifying the left side, we have :
     $ norm(4x - 12) = 4 * norm(x - 3) $
-
+    
     So we want to ensure that
     $ 4 * norm(x - 3) < epsilon "    if    " 0<norm(x-3)<delta $
-
+    
     To achieve this, we can choose $delta = epsilon / 4$. Then, if $0 < norm(x - 3) < delta$, we have
     $ norm((4x - 5) - 7) = 4 * norm(x - 3) < 4 * delta = epsilon $
-
+    
     2. Formal Proof :
     Let $epsilon > 0$ be given. Choose $delta = epsilon / 4$. Then, if $0 < norm(x - 3) < delta$, we have
     $ norm((4x - 5) - 7) = 4 * norm(x - 3) < 4 * delta = epsilon $
-
+    
     Thus, by the epsilon-delta definition of a limit, we conclude that $lim_(x -> 3) (4x - 5) = 7$.
     #align(center)[
       #image("../images/epsilon-delta-ex.png", width: 50%)
@@ -153,4 +153,3 @@ Now lets utilize this to solve some problems.
     Thus, by the epsilon-delta definition of a limit, we conclude that $lim_(x->0+) sqrt(x) = 0$.
   ]
 ]
-

@@ -1,3 +1,4 @@
+
 #import "../../templates/templater.typ": *
 
 = The Tangent Problem
@@ -41,7 +42,7 @@
 
 #definition("Instantaneous Velocity")[
   A bit off course, but we can define instantaneous velocity using the later-defined idea of the limit.
-
+  
   Instantaneous velocity at a specific time is the limit of the average velocity as the time interval approaches zero. It represents the velocity of the car at a precise moment in time. Mathematically, the instantaneous velocity $v(t)$ at time $t$ is given by:
   $ v(t) = lim_"Δt"→0 (s(t + "Δt") - s(t)) / "Δt" $
 ]
