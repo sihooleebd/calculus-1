@@ -434,8 +434,10 @@ def run_build_process(scr, hierarchy, opts):
     chapters = [(i, hierarchy[i]) for i in sorted(by_ch.keys())]
     ui.log(f'Building {len(pages)} pages from {len(chapters)} chapters', True)
     
-    total_tasks = (3 if opts['frontmatter'] else 0) + sum((1 + len(by_ch[ci]) for ci, _ in chapters))
-    total = total_tasks + 3
+    # Total includes: compile tasks + post-compile (toc regen, merge, metadata)
+    compile_tasks = (3 if opts['frontmatter'] else 0) + sum((1 + len(by_ch[ci]) for ci, _ in chapters))
+    post_compile_tasks = 3  # TOC regen, merge, metadata
+    total = compile_tasks + post_compile_tasks
     ui.set_phase('Compiling')
     ui.set_progress(0, total)
     
@@ -448,8 +450,9 @@ def run_build_process(scr, hierarchy, opts):
         progress_counter += 1
         if progress_counter > total:
             total = progress_counter
-        comp_pct = min(95, int(95 * progress_counter / total))
-        if not ui.set_progress(progress_counter, total, visual_percent=comp_pct):
+        # Linear progress: each task is equal weight
+        pct = int(100 * progress_counter / total)
+        if not ui.set_progress(progress_counter, total, visual_percent=pct):
             return False
         ui.set_task(f"Completed {progress_counter} compilation tasks") 
         return True 
@@ -464,8 +467,6 @@ def run_build_process(scr, hierarchy, opts):
     try:
         pdfs = bm.build_parallel(chapters, config, opts, {'on_progress': on_progress, 'on_log': on_log})
         
-        ui.set_progress(progress_counter, total, visual_percent=95)
-        
         current_page_count = sum([get_pdf_page_count(p) for p in pdfs]) + 1
         
         page_map = bm.page_map
@@ -473,18 +474,26 @@ def run_build_process(scr, hierarchy, opts):
         if opts['frontmatter'] and config.get('display-outline', True):
             ui.set_task('Regenerating TOC')
             out = BUILD_DIR / '02_outline.pdf'
+            
+            # Build folder_flags to pass chapter/page folder data
+            ch_folders = opts.get('ch_folders', [])
+            pg_folders = opts.get('pg_folders', {})
+            folder_flags = list(flags)
+            folder_flags.extend(['--input', f'chapter-folders={json.dumps(ch_folders)}'])
+            folder_flags.extend(['--input', f'page-folders={json.dumps(pg_folders)}'])
+            
             compile_target(
                 'outline', 
                 out, 
                 page_offset=page_map.get('outline', 0), 
                 page_map=page_map, 
-                extra_flags=flags, 
+                extra_flags=folder_flags, 
                 callback=ui.refresh, 
                 log_callback=ui.log_typst
             )
             progress_counter += 1
             if progress_counter > total: total = progress_counter
-            ui.set_progress(progress_counter, total, visual_percent=96)
+            ui.set_progress(progress_counter, total, visual_percent=int(100 * progress_counter / total))
             ui.log('TOC regenerated', True)
         else:
             pass
@@ -497,7 +506,7 @@ def run_build_process(scr, hierarchy, opts):
         method = merge_pdfs(pdfs, OUTPUT_FILE)
         progress_counter += 1
         if progress_counter > total: total = progress_counter
-        ui.set_progress(progress_counter, total, visual_percent=98)
+        ui.set_progress(progress_counter, total, visual_percent=int(100 * progress_counter / total))
         
         if not method or not OUTPUT_FILE.exists():
             ui.log('Merge failed!', False)

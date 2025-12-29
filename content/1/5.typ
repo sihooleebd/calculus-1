@@ -34,11 +34,10 @@
       y-domain: (-0.5, 1.5),
       show-grid: true,
       // sin(x)/x - adaptive graph handles singularity at x=0
-      graph(x => calc.sin(x) / x, domain: (-8, 8), label: $sin(x)/x$),
+      graph(x => calc.sin(x) / x, domain: (-8, 8), label: $sin(x)/x$, hole: (0,)),
       // Horizontal line at y=1 showing the limit
       func(x => 1, domain: (-8, 8), label: "y = 1", style: (stroke: gray)),
       // Hollow point at (0, 1) showing the limit value
-      point(0, 1, label: $L$),
     )
   ]
 ]

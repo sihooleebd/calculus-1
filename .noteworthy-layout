@@ -1,0 +1,2 @@
+;; Noteworthy project settings
+(:preview-width 64 :pdf-width 96)
