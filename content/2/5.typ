@@ -45,3 +45,5 @@ One useful form to note is the Power Rule combined with the Chain Rule :
     Using the power rule with chain rule, we get $y' = 100(x^3 - 1)^99 dot 3x^2 = 300x^2(x^3 - 1)^99$
   ]
 ]
+
+
