@@ -33,3 +33,15 @@ The chain rule is a powerful tool to solve the derivative of composite functions
     Using the chain rule, we get $F'(x) = cos(sqrt(x)) dot (1/2)(x^2 + 1)^(-1/2) dot 2x = cos(sqrt(x)) / (2 dot sqrt(x^2 + 1))$.
   ]
 ]
+
+One useful form to note is the Power Rule combined with the Chain Rule :
+#definition("Power Rule with Chain Rule")[
+  If $f(x) = (g(x))^n$, then $f'(x) = n(g(x))^(n-1) g'(x)$.
+]
+
+#example("Power Rule with Chain Rule")[
+  Differentiate $y = (x^3 - 1)^100$
+  #solution("")[
+    Using the power rule with chain rule, we get $y' = 100(x^3 - 1)^99 dot 3x^2 = 300x^2(x^3 - 1)^99$
+  ]
+]
