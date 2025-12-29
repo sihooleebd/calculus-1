@@ -15,11 +15,11 @@ If these conditions are not met, we call the function is "discontinuous" at $x =
 
 #example("Continuity Example")[
   Identify if the functions are discontinuous.
-  
+
   (a) $f(x) = (x^2 - x - 2)/(x-2)$
-  
+
   (b) $f(x) = cases((x^2 - x - 2)/(x-2) &"    if  " x eq.not 2, 1 &"    if  " x = 2)$
-  
+
   #solution("", "(a)")[
     The function is discontinuous at $x = 2$. This is because $f(2)$ is not defined, since the denominator becomes $0$ at this point. Therefore, the first condition for continuity is not satisfied.
   ]
@@ -30,10 +30,10 @@ If these conditions are not met, we call the function is "discontinuous" at $x =
       $f(x) = (x^2 - x - 2)/(x-2) = ((x-2)(x+1))/(x-2) = x + 1$ for $x eq.not 2$.
       Therefore, $lim_(x -> 2) f(x) = lim_(x -> 2) (x + 1) = 3$. So the second condition is satisfied.
     3. However, $lim_(x -> 2) f(x) = 3$ and $f(2) = 1$, so the third condition is not satisfied.
-    
+
     Thus, the function is discontinuous at $x = 2$.
   ]
-  
+
   #cartesian-canvas(
     size: (8, 5),
     x-domain: (-1, 5),
@@ -41,7 +41,7 @@ If these conditions are not met, we call the function is "discontinuous" at $x =
     show-grid: true,
     // f(x) = (x²-x-2)/(x-2) = x+1 for x ≠ 2
     graph(x => x + 1, domain: (-1, 1.95), hole: (2,), label: $f(x) = (x^2-x-2)/(x-2)$),
-    
+
     graph(x => x + 1, domain: (2.05, 5)),
     // Show the hole at (2, 3) - use hollow point
     // Defined point at (2, 1)
@@ -88,7 +88,7 @@ Using this info, we can create the following definition :
                           & = 1 - 0 \
                           & = 1 = f(1) $. Thus, $f$ is left continuous at $x = 1$.
       Therefore, $f$ is continuous on the closed interval $[-1, 1]$.
-    
+
     #cartesian-canvas(
       size: (8, 5),
       x-domain: (-1.5, 1.5),
@@ -154,7 +154,7 @@ You may have noticed that we didnt even care about continuity during polynomials
   Find $lim_(x->-2) (x^3 + 2x^2 - 1)/(5 - 3x)$.
   #solution("")[
     Since the function is a rational function and $2$ is in the domain of the function, we can use the Continuity of Rational Functions theorem.
-    
+
     $lim_(x->-2) (x^3 + 2x^2 - 1)/(5 - 3x) = (-2^3 + 2*(-2)^2 - 1)/(5 - 3*(-2)) = (-8 + 8 - 1)/(5 + 6) = -1/11$
     #cartesian-canvas(
       size: (8, 5),

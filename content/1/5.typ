@@ -5,7 +5,7 @@
 - In the previous section, whilst discussing tangents and velocity, we kept encountering a problem: how do we define the slope of a curve at a single point, or the velocity of a car at a precise moment in time?
 - Both of these problems can be solved using the concept of *limits*.
 #definition("Intuitive Definition of the Limit")[
-  
+
   Suppose $f(x)$ is defined whilst $x$ is near $a$.
   Then we write $ \lim_{x \to a} f(x) = L $
   We read this as "the limit of $f(x)$ as $x$ approaches $a$ is $L$". This claim must be preceded by the statement that as $f(x)$ gets arbitrarily closer and closer to $L$ as $x$ gets closer and closer to $a$.
@@ -27,7 +27,7 @@
     )
     By the intuitive definition of the limit, we can see that as $x$ approaches $0$, $f(x)$ approaches $1$. Therefore, we can conclude that:
     $ lim_(x -> 0) sin(x)/x = 1 $
-    
+
     #cartesian-canvas(
       size: (8, 5),
       x-domain: (-8, 8),
@@ -74,7 +74,7 @@
     By the intuitive definition of one-sided limits, we can see that as $x$ approaches $0$ from the left, $H(x)$ approaches $0$, and as $x$ approaches $0$ from the right, $H(x)$ approaches $1$. Therefore, we can conclude that:
     $ lim_(x -> 0^-) H(x) = 0 $
     $ lim_(x -> 0^+) H(x) = 1 $
-    
+
     #cartesian-canvas(
       size: (8, 4),
       x-domain: (-3, 3),
@@ -107,7 +107,7 @@
     )
     By evaluating $sin(pi/x)$ at values of $x$ that get closer and closer to $0$, we can see that the function does not approach a single value. Instead, it oscillates between $-1$ and $1$. Therefore, we can conclude that:
     $ lim_(x -> 0) sin(pi/x) $ does not exist.
-    
+
     #cartesian-canvas(
       size: (8, 4),
       x-domain: (-1, 1),
@@ -136,7 +136,7 @@
     By evaluating $1/x^2$ at values of $x$ that get closer and closer to $0$, we can see that the function grows without bound. Therefore, we can conclude that:
     $ lim_(x -> 0) (1/x^2) = infinity $
     (which mathematically means that the limit does not exist in the real number system)
-    
+
     #cartesian-canvas(
       size: (8, 5),
       x-domain: (-3, 3),
@@ -184,7 +184,7 @@
     $ lim_(x -> 3^-) (2x)/(x-3) = -infinity $
     Since both one-sided limits approach infinity (one positive, one negative),
     we can conclude that the function has a vertical asymptote at $x=3$.
-    
+
     #cartesian-canvas(
       size: (8, 6),
       x-domain: (-2, 8),

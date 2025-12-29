@@ -27,7 +27,7 @@ also, some special limits :
 
 #theorem("The Constant Function Law")[
   For any constant $c$, $lim_(x -> a) c = c$
-  
+
   Written differently, $lim_(x ->a) = a$
 ]
 
@@ -35,14 +35,14 @@ also, some special limits :
   Evaluate $lim_(x -> 5) (2x^2 - 3x + 4)$.
   #solution("")[
     $ lim_(x -> 5) (2x^2 - 3x + 4) = lim_(x -> 5) 2x^2 - lim_(x -> 5) 3x + lim_(x -> 5) 4 $
-    
+
     ($because$ the Sum and Difference Law)
-    
+
     $ = 2 * lim_(x -> 5) x^2 - 3 * lim_(x -> 5) x + 4 $
-    
+
     ($because$ the Constant Multiple Law)
     $ = 2 * 5^2 - 3 * 5 + 4 $
-    
+
     ($because$ the Power Law and Constant Function Law)
     $ = 50 - 15 + 4 = 39 $
   ]
@@ -57,7 +57,7 @@ Above, we have discussed that $lim_(x->a)x = a$. What if we generalize this into
   Evaluate $lim_(x -> 2) (x^3 - 4x + 1)/(x^2 + 3)$.
   #solution("")[
     Since the function is a rational function and $2$ is in the domain of the function, we can use the Direct Substitution Property.
-    
+
     $lim_(x -> 2) (x^3 - 4x + 1)/(x^2 + 3) = (2^3 - 4*2 + 1)/(2^2 + 3) = (8 - 8 + 1)/(4 + 3) = 1/7$
   ]
 ]
@@ -66,11 +66,11 @@ Above, we have discussed that $lim_(x->a)x = a$. What if we generalize this into
   Evaluate $lim_(x -> 1) (x^2-1)/(x-1)$.
   #solution("")[
     We cannot directly substitute $1$ into the function, since it would create a division by zero. However, we can simplify the expression first.
-    
+
     $ (x^2 - 1)/(x - 1) = ((x - 1)(x + 1))/(x - 1) = x + 1 because x ≠ 1 $.
-    
+
     Now we can find the limit:
-    
+
     $ lim_(x -> 1) (x + 1) = 1 + 1 = 2 $
   ]
 ]
@@ -96,11 +96,11 @@ From the intuitive definition of left/right limits, we can know the following :
   #solution("")[
     We know that $ -1 ≤ sin(1/x) ≤ 1 $ for all $x ≠ 0$. Multiplying all parts of the inequality by $x^2$ (which is always non-negative), we get :
     $ -x^2 ≤ x^2 * sin(1/x) ≤ x^2 $
-    
+
     Now, we can find the limits of the two outer functions as $x$ approaches $0$:
     $ lim_(x -> 0) -x^2 = 0 $
     $ lim_(x -> 0) x^2 = 0 $
-    
+
     Since both limits are equal to $0$, by the Squeeze Theorem, we have :
     $ lim_(x -\u003e 0) x^2 * sin(1/x) = 0 $
     #cartesian-canvas(
