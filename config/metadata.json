@@ -2,8 +2,8 @@
     "title": "Calculus I",
     "subtitle": "Explanations, Problems & Solutions",
     "authors": [
-        "Sihoo Lee"
+        "Sihoo Lee % Hojun Lee"
     ],
     "affiliation": "Korea Science Academy of KAIST",
-    "logo": "../../content/images/cover-logo.png"
+    "logo": "../../../content/images/cover-logo.png"
 }
