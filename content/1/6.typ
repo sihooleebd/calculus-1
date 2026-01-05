@@ -1,7 +1,7 @@
 #import "../../templates/templater.typ": *
-- Limits Have some rules that we must comply to.
+- Limits have some rules that we must comply to.
 #theorem("The Laws of Limits")[
-  Suppose that $c$ i s a constant and the limits $lim_(x -> a) f(x)$ and $lim_(x -> a) g(x)$ exist. Then, the following properties hold:
+  Suppose that $c$ is a constant and the limits $lim_(x -> a) f(x)$ and $lim_(x -> a) g(x)$ exist. Then, the following properties hold:
   1. $lim_(x -> a) [f(x) + g(x)] = lim_(x -> a) f(x) + lim_(x -> a) g(x)$
   2. $lim_(x -> a) [f(x) - g(x)] = lim_(x -> a) f(x) - lim_(x -> a) g(x)$
   3. $lim_(x -> a) [c * f(x)] = c * lim_(x -> a) f(x)$

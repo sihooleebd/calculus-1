@@ -5,17 +5,16 @@
 - In the previous section, whilst discussing tangents and velocity, we kept encountering a problem: how do we define the slope of a curve at a single point, or the velocity of a car at a precise moment in time?
 - Both of these problems can be solved using the concept of *limits*.
 #definition("Intuitive Definition of the Limit")[
-
   Suppose $f(x)$ is defined whilst $x$ is near $a$.
-  Then we write $ \lim_{x \to a} f(x) = L $
+  Then we write $ lim_{x -> a} f(x) = L $
   We read this as "the limit of $f(x)$ as $x$ approaches $a$ is $L$". This claim must be preceded by the statement that as $f(x)$ gets arbitrarily closer and closer to $L$ as $x$ gets closer and closer to $a$.
-
 ]
 
 #example("Limit Basics")[
   Consider the function $f(x) = sin(x)/x$. Evaluate $f(x)$ at values of $x$ that get closer and closer to $0$:
   #solution("", "1")[
     #table-plot(
+      horizontal: true,
       headers: ($x$, $f(x)$),
       data: (
         (1, 0.84147098),
@@ -42,12 +41,43 @@
   ]
 ]
 
-- Above, we briefly mentioned that limits may differ when approached from different sides. This can be expanded to the fact that limits may not exist at all  from some sides in some cases.
-#definition("Intuitive Definition of One-Sided Limits")[
-  Suppose $f(x)$ is defined whilst $x$ is near $a$.
-  Then we write $ \lim_{x \to a^+} f(x) = L_1 $ and $ \lim_{x \to a^-} f(x) = L_2 $
-  We read these as "the limit of $f(x)$ as $x$ approaches $a$ from the right is $L_1$" and "the limit of $f(x)$ as $x$ approaches $a$ from the left is $L_2$". This claim must be preceded by the statement that as $f(x)$ gets arbitrarily closer and closer to $L_1$ as $x$ gets closer and closer to $a$ from the right, and similarly for $L_2$ from the left. Here, we call $L_1$ as the *right-hand limit* and $L_2$ as the *left-hand limit*.
+#note("Calculator Somtimes Lie")[
+  Let's evalutate the values of $ lim_(t->0) (sq(t sr + 9) - 3)/(t sr) $
+  #let dat = (1.0, 0.5, 0.1, 0.05, 0.01)
+  #value-table(
+    horizontal: true,
+    variable: $ t $,
+    func: $ (sq( t sr + 9 - 3 ))/(t sr) $,
+    values: dat.map(x => [$plus.minus$ #x]),
+    results: dat.map(x => align(center + horizon)[#calc.round((calc.sqrt(x * x + 9) - 3)/(x*x), digits: 7)])
+  )
+  We can see the results are approaching to 0.16666... \
+  So it looks like the value of the limit is $1/6$.
+  
+  To make it sure, Let's try plugging in even smaller number.
+  #let dat = (0.001, 0.0001, 0.00001, 0.00000001)
+  #value-table(
+    horizontal: true,
+    variable: $ t $,
+    func: $ (sq( t sr + 9 - 3 ))/(t sr) $,
+    values: dat.map(x => [$plus.minus$ #x]),
+    results: dat.map(x => align(center + horizon)[#calc.round((calc.sqrt(x * x + 9) - 3)/(x*x), digits: 9)])
+  )
+  ??????
+  
+  Is the real limit 0? Actually, the reason is imperfect algorithm of calculator. Since calculator is sort of a computer and it only can compute discrete values, very briefly speadking, it somehow works like _flooring_ the values of infinite (or very many) numbers in decimal space. This causes the calculator think $sq(t sr + 9)=0$ when $t$ is sufficiently small.
+]
 
+- Above, we briefly mentioned that limits may differ when approached from different sides. This can be expanded to the fact that limits may not exist at all  from some sides in some cases.
+
+#definition("Intuitive Definition of One-Sided Limits")[
+  Suppose $f(x)$ is defined whilst $x$ is near $a$. \
+  Then we write $ lim_{x -> a^+} f(x) = L_1 $ and $ lim_{x -> a^-} f(x) = L_2 $
+  We read these as "the limit of $f(x)$ as $x$ approaches $a$ from the right is $L_1$" and "the limit of $f(x)$ as $x$ approaches $a$ from the left is $L_2$". \
+  This claim must be preceded by the statement that as $f(x)$ gets arbitrarily closer and closer to $L_1$ as $x$ gets closer and closer to $a$ from the right, and similarly for $L_2$ from the left. \
+  Here, we call $L_1$ as the *right-hand limit* and $L_2$ as the *left-hand limit*.
+  
+  The value of limits only exist when both left- and right-hand limits are equal.
 ]
 
 #example("The Heaveside Function")[
@@ -61,6 +91,7 @@
   Evaluate $H(x)$ at values of $x$ that get closer and closer to $0$ from both sides:
   #solution("More Evaluation...")[
     #table-plot(
+      horizontal: true,
       headers: ($x$, $H(x)$),
       data: (
         (-1, 0),
@@ -74,19 +105,15 @@
     By the intuitive definition of one-sided limits, we can see that as $x$ approaches $0$ from the left, $H(x)$ approaches $0$, and as $x$ approaches $0$ from the right, $H(x)$ approaches $1$. Therefore, we can conclude that:
     $ lim_(x -> 0^-) H(x) = 0 $
     $ lim_(x -> 0^+) H(x) = 1 $
+    
+    Since $limx(0^+)H(x) != limx(0^-)H(x)$ we can conclude that $limx(0)H(x)$ do not exist.
 
     #cartesian-canvas(
       size: (8, 4),
       x-domain: (-3, 3),
       y-domain: (-0.5, 1.5),
-      show-grid: true,
       // Heaviside: 0 for x < 0
-      graph(x => 0, domain: (-3, -0.01), label: $H(x)$),
-      // Heaviside: 1 for x >= 0
-      graph(x => 1, domain: (0.01, 3)),
-      // Show the jump discontinuity
-      point(0, 0, label: "", style: (fill: none)),
-      point(0, 1, label: ""),
+      graph(x => if (x < 0) {0} else {1}, domain: (-3, 3), label: $H(x)$, hole: (-0.001,), filled-hole: (0,)),
     )
   ]
 ]
@@ -140,8 +167,8 @@
     #cartesian-canvas(
       size: (8, 5),
       x-domain: (-3, 3),
-      y-domain: (-1, 10),
-      show-grid: true,
+      y-domain: (-1, 1000),
+      y-tick: 100,
       // 1/x² - adaptive graph handles singularity at x=0
       graph(x => 1 / calc.pow(x, 2), domain: (-3, 3), label: $1/x^2$),
       // Vertical asymptote line at x=0
@@ -191,7 +218,6 @@
       y-domain: (-15, 15),
       x-tick: 1,
       y-tick: 5,
-      show-grid: true,
       // 2x/(x-3) - split at x=3 (asymptote)
       graph(x => (2 * x) / (x - 3), domain: (-2, 2.9), label: $y = (2x)/(x-3)$),
       graph(x => (2 * x) / (x - 3), domain: (3.1, 8)),

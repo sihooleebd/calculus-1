@@ -106,7 +106,7 @@
       x-domain: (-1.5, 5.5),
       y-domain: (-1.5, 5.5),
       tanf(domain: (-1.5, 5.5)),
-      tan-line(tanf().f, 2, length: 3),
+      tangent(tanf().f, 2, length: 3),
       point(2,(tanf().f)(2), label: $P$)
   )
   How should we find the tangent line to a curve at a given point on a curve? \

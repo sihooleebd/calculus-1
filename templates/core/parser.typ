@@ -78,7 +78,3 @@
   }
 }
 
-
-// Local Variables:
-// typst-preview--master-file: "/home/r0k0r/Typst/calculus-1/templates/core/parser.typ"
-// End:
