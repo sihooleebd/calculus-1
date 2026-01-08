@@ -11,18 +11,30 @@
 /// - y: Y coordinate
 /// - z: Z coordinate (optional, none for 2D)
 /// - label: Optional label to display
+/// - label-anchor: Optional anchor for label positioning (e.g., "north", "south", "east", "west")
 /// - style: Optional style overrides (stroke, fill, size)
-#let point(x, y, z: none, label: none, style: auto) = (
+/// - label-padding: Label padding value (default: 0.2)
+#let point(x, y, z: none, label: none, label-anchor: none, style: auto, label-padding: 0.2) = (
   type: "point",
   x: x,
   y: y,
   z: z,
   label: label,
+  label-anchor: label-anchor,
   style: style,
+  label-padding: label-padding,
 )
 
 /// Alias for backward compatibility
-#let point-3d(x, y, z, label: none, style: auto) = point(x, y, z: z, label: label, style: style)
+#let point-3d(x, y, z, label: none, label-anchor: none, style: auto, label-padding: 0.2) = point(
+  x,
+  y,
+  z: z,
+  label: label,
+  label-anchor: label-anchor,
+  style: style,
+  label-padding: label-padding,
+)
 
 /// Create a point from polar coordinates
 ///
@@ -30,10 +42,12 @@
 /// - r: Radius (distance from origin)
 /// - theta: Angle in radians or degrees
 /// - label: Optional label
+/// - label-anchor: Optional anchor for label positioning
 /// - style: Optional style overrides
-#let point-polar(r, theta, label: none, style: auto) = {
+/// - label-padding: Label padding value (default: 0.2)
+#let point-polar(r, theta, label: none, label-anchor: none, style: auto, label-padding: 0.2) = {
   let (x, y) = polar-to-cartesian(r, theta)
-  point(x, y, label: label, style: style)
+  point(x, y, label: label, label-anchor: label-anchor, style: style, label-padding: label-padding)
 }
 
 /// Check if object is a point

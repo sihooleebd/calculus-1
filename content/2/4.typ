@@ -87,7 +87,7 @@ $ d/(d x) (cot(x)) = -csc^2(x) $
   #proof("1")[
     We will utilize the Squeeze Theorem to prove this.
     #let O = point(0, 0, label: "O")
-    #let A = point(5, 0, label: "A")
+    #let A = point(5, 0)
     #let C = point(5, 5 / calc.sqrt(3), label: "C")
 
     #let B = point-at-angle(
@@ -97,7 +97,7 @@ $ d/(d x) (cot(x)) = -csc^2(x) $
       from: A,
       label: "B",
     )
-    #let D = point(x(B), 0, label: "D")
+    #let D = point(x(B), 0)
     #blank-canvas(
       O,
       A,

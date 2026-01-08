@@ -20,6 +20,7 @@
 /// - y-tick: Y-axis tick spacing (default: 1)
 /// - show-grid: Whether to show grid lines (default: false)
 /// - axis-style: Style of axes - "school-book", "scientific", or none (default: "school-book")
+/// - axis-label: Labels for the axes as a tuple (x-label, y-label) (default: `($x$, $y$)`)
 /// - ..objects: Geometry objects to render
 #let cartesian-canvas(
   theme: (:),
@@ -32,6 +33,7 @@
   y-tick: 1,
   show-grid: false,
   axis-style: "school-book",
+  axis-label: ($x$, $y$),
   ..objects,
 ) = {
   // Compute actual size from width/height or size tuple
@@ -138,12 +140,26 @@
   }
   let is-handled(v) = handled-vectors.contains((v.x, v.y))
 
+  let plot-text-size = theme.at("plot", default: (:)).at("text-size", default: 8pt)
+  let plot-label-size = theme.at("plot", default: (:)).at("label-size", default: 10pt)
+
+  // Force all text in this canvas to match the stroke color and default annotation size
+  // This ensures the '0' origin label matches other ticks
+  set text(fill: stroke-col, size: plot-text-size)
+
   cetz.canvas({
     import cetz.draw: *
+
 
     set-style(
       stroke: stroke-col,
       fill: none,
+      axes: (
+        stroke: stroke-col,
+        tick: (stroke: stroke-col),
+        grid: (stroke: (paint: grid-col)),
+      ),
+      tick-label: (fill: stroke-col), // Explicitly style tick labels
     )
 
     plot.plot(
@@ -154,11 +170,11 @@
       x-grid: show-grid,
       y-grid: show-grid,
 
-      x-label: text(fill: stroke-col, $x$),
-      y-label: text(fill: stroke-col, $y$),
+      x-label: text(fill: stroke-col, size: plot-label-size, axis-label.at(0)),
+      y-label: text(fill: stroke-col, size: plot-label-size, axis-label.at(1)),
 
-      x-format: x => text(fill: stroke-col, size: 8pt, str(x)),
-      y-format: y => text(fill: stroke-col, size: 8pt, str(y)),
+      x-format: x => text(fill: stroke-col, size: plot-text-size, str(x)),
+      y-format: y => text(fill: stroke-col, size: plot-text-size, str(y)),
 
       x-min: x-domain.at(0),
       x-max: x-domain.at(1),
@@ -166,10 +182,19 @@
       y-max: y-domain.at(1),
 
       legend-style: (fill: theme.at("page-fill", default: none), stroke: stroke-col),
+      
 
       {
-        // Workaround for cetz-plot annotation crash: initialize data bounds
-        plot.add(((0, 0),), style: (stroke: none), mark: none)
+        // Add corner points to ensure plot bounds are respected.
+        // This also serves as a workaround for a cetz-plot annotation crash.
+        plot.add(
+          (
+            (x-domain.at(0), y-domain.at(0)),
+            (x-domain.at(1), y-domain.at(1)),
+          ),
+          style: (stroke: none),
+          mark: none,
+        )
 
         let bounds = (x: x-domain, y: y-domain)
 
@@ -357,13 +382,16 @@
   let d = pi-divisor
   let gcd(a, b) = if b == 0 { a } else { gcd(b, calc.rem(a, b)) }
 
+  let plot-text-size = theme.at("plot", default: (:)).at("text-size", default: 8pt)
+  let plot-label-size = theme.at("plot", default: (:)).at("label-size", default: 10pt)
+
   let x-format = x => {
     let n = int(calc.round(x * d / calc.pi))
     let g = gcd(calc.abs(n), d)
     let num = calc.quo(n, g)
     let denom = calc.quo(d, g)
 
-    text(fill: stroke-col, size: 8pt, {
+    text(fill: stroke-col, size: plot-text-size, {
       if num == 0 { $0$ } else if denom == 1 {
         if num == 1 { $pi$ } else if num == -1 { $-pi$ } else { $#num pi$ }
       } else {
@@ -371,6 +399,9 @@
       }
     })
   }
+
+  // Force all text in this canvas to match the stroke color
+  set text(fill: stroke-col, size: plot-text-size)
 
   cetz.canvas({
     import cetz.draw: *
@@ -387,7 +418,7 @@
       y-label: text(fill: stroke-col, $y$),
 
       x-format: x-format,
-      y-format: y => text(fill: stroke-col, size: 8pt, str(y)),
+      y-format: y => text(fill: stroke-col, size: plot-text-size, str(y)),
 
       x-min: x-domain.at(0),
       x-max: x-domain.at(1),

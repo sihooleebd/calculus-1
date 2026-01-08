@@ -43,6 +43,7 @@ So where is this used? It is a famous thing that $sin(theta) approx theta$ near 
       label: $m g cos theta$,
       style: (stroke: green),
     )
+
     #blank-canvas(
       segment(pivot, bob, label: $L$),
       point(x(bob), y(bob), label: "m"),
@@ -53,6 +54,7 @@ So where is this used? It is a famous thing that $sin(theta) approx theta$ near 
       tangent-force,
       radial,
     )
+    
     The equation of motion for a pendulum is derived from Newton's second law:
     $ m L (d^2 theta)/(d t^2) = -m g sin(theta) $
     This simplifies to:
