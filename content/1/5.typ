@@ -7,7 +7,7 @@
 #definition("Intuitive Definition of the Limit")[
 
   Suppose $f(x)$ is defined whilst $x$ is near $a$.
-  Then we write $ \lim_{x \to a} f(x) = L $
+  Then we write $ lim_(x -> a) f(x) = L $
   We read this as "the limit of $f(x)$ as $x$ approaches $a$ is $L$". This claim must be preceded by the statement that as $f(x)$ gets arbitrarily closer and closer to $L$ as $x$ gets closer and closer to $a$.
 
 ]
