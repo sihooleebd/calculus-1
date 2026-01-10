@@ -27,7 +27,7 @@
     By the intuitive definition of the limit, we can see that as $x$ approaches $0$, $f(x)$ approaches $1$. Therefore, we can conclude that:
     $ lim_(x -> 0) sin(x)/x = 1 $
 
-    #cartesian-canvas(
+    #trig-canvas(
       size: (8, 5),
       x-domain: (-8, 8),
       y-domain: (-0.5, 1.5),
@@ -35,7 +35,7 @@
       // sin(x)/x - adaptive graph handles singularity at x=0
       graph(x => calc.sin(x) / x, domain: (-8, 8), label: $sin(x)/x$, hole: (0,)),
       // Horizontal line at y=1 showing the limit
-      func(x => 1, domain: (-8, 8), label: "y = 1", style: (stroke: gray)),
+      func(x => 1, domain: (-8, 8), label: $y = 1$, style: (stroke: gray)),
       // Hollow point at (0, 1) showing the limit value
     )
   ]
@@ -66,6 +66,28 @@
   ??????
   
   Is the real limit 0? Actually, the reason is imperfect algorithm of calculator. Since calculator is sort of a computer and it only can compute discrete values, very briefly speadking, it somehow works like _flooring_ the values of infinite (or very many) numbers in decimal space. This causes the calculator think $sq(t sr + 9)=0$ when $t$ is sufficiently small.
+  
+  #let asdf(t) = {
+      cartesian-canvas(
+        size: (2.5,2),
+        x-domain: (-t,t),
+        y-domain: (-0.05, 0.2),
+        y-tick: 0.1,
+        axis-label: ($t$, $y$),
+        graph(x => (calc.sqrt(x*x + 9) - 3)/(x*x))
+      )
+      align(center)[#text(size: 0.9em)[$-#(t)<=t<=#(t)$]]
+    }
+  
+  #grid(
+    columns: (1fr, 1fr, 1fr, 1fr),
+    asdf(1),
+    asdf(0.1),
+    asdf(0.001),
+    asdf(0.00001)
+  )
+  
+  You can also see corrupted part on graphing calculator in extremely small values.
 ]
 
 - Above, we briefly mentioned that limits may differ when approached from different sides. This can be expanded to the fact that limits may not exist at all  from some sides in some cases.
@@ -151,6 +173,7 @@
   Find $ lim_(x -> 0) (1/x^2) $ if it exists
   #solution("")[
     #table-plot(
+      horizontal: true,
       headers: ($x$, $1/x^2$),
       data: (
         (1, 1),
@@ -181,13 +204,23 @@
   Suppose $f(x)$ is defined whilst $x$ is near $a$ on both sides, except at $a$ itself.
   Then we write $ lim_(x -> a) f(x) = infinity $
   which means that the values of $f(x)$ can be made arbitrarily large by taking $x$ sufficiently close but not equal to $a$.
-
 ]
+
 - Of course, we can do the same for negative infinity.
 #definition("Intuitive Definition of a Negative Infinity Limit")[
   Suppose $f(x)$ is defined whilst $x$ is near $a$ on both sides, except at $a$ itself.
   Then we write $ lim_(x -> a) f(x) = -infinity $
   which means that the values of $f(x)$ can be made arbitrarily small (negatively large) by taking $x$ sufficiently close but not equal to $a$.
+]
+
+#notation("Alternative notation")[
+  Another notation for $limx(a)f(x)=oo$ is 
+  $ f(x)->oo "    as    " x -> a $
+  We read this as
+  #align(center)["The limit of $f(x)$, as $x$ approaches $a$, is (negative) infinity."]
+  #align(center)["$f(x)$ becomes (negative) infinite as $x$ approaches $a$"]
+  #align(center)["$f(x)$ (increases/decreases) without bound as $x$ approaches $a$"]
+  Keep in mind that $oo$ is not a number, but just an _expression_.
 ]
 
 - At these points, we can define a *vertial asymptote*.
@@ -219,12 +252,11 @@
       x-tick: 1,
       y-tick: 5,
       // 2x/(x-3) - split at x=3 (asymptote)
-      graph(x => (2 * x) / (x - 3), domain: (-2, 2.9), label: $y = (2x)/(x-3)$),
-      graph(x => (2 * x) / (x - 3), domain: (3.1, 8)),
+      graph(x => (2 * x) / (x - 3), domain: (-2, 9), label: $ y = (2x)/(x-3) $),
       // Vertical asymptote at x=3
-      segment(point(3, -15), point(3, 15), style: (stroke: gray)),
+      segment(point(3, -15), point(3, 15), style: (stroke: (paint: gray, dash: "dashed"))),
       // Horizontal asymptote at y=2
-      func(x => 2, domain: (-2, 8), label: "y = 2", style: (stroke: gray)),
+      func(x => 2, domain: (-2, 8), style: (stroke: (paint: gray, dash: "dashed"))),
     )
   ]
 ]

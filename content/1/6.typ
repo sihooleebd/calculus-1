@@ -2,13 +2,29 @@
 - Limits have some rules that we must comply to.
 #theorem("The Laws of Limits")[
   Suppose that $c$ is a constant and the limits $lim_(x -> a) f(x)$ and $lim_(x -> a) g(x)$ exist. Then, the following properties hold:
-  1. $lim_(x -> a) [f(x) + g(x)] = lim_(x -> a) f(x) + lim_(x -> a) g(x)$
-  2. $lim_(x -> a) [f(x) - g(x)] = lim_(x -> a) f(x) - lim_(x -> a) g(x)$
-  3. $lim_(x -> a) [c * f(x)] = c * lim_(x -> a) f(x)$
-  4. $lim_(x -> a) [f(x) * g(x)]
-    = lim_(x -> a) f(x) * lim_(x -> a) g(x)$
-  5. $lim_(x -> a) [f(x) / g(x)]
-    = (lim_(x -> a) f(x)) / (lim_(x -> a) g(x))$, provided that $lim_(x -> a) g(x) ≠ 0$
+  #grid(
+    columns: (1fr, 12em),
+    [
+      1. $lim_(x -> a) [f(x) + g(x)] = lim_(x -> a) f(x) + lim_(x -> a) g(x)$
+       
+      2. $lim_(x -> a) [f(x) - g(x)] = lim_(x -> a) f(x) - lim_(x -> a) g(x)$
+       
+      3. $lim_(x -> a) [c dot f(x)] = c dot lim_(x -> a) f(x)$
+       
+      4. $lim_(x -> a) [f(x) dot g(x)]
+        = lim_(x -> a) f(x) dot lim_(x -> a) g(x)$
+        
+      5. $lim_(x -> a) [f(x) / g(x)]
+        = (lim_(x -> a) f(x)) / (lim_(x -> a) g(x))$, provided that $lim_(x -> a) g(x) ≠ 0$
+    ],
+    [
+      #align(right)[Sum Law]
+      #align(right)[Difference Law]
+      #align(right)[Constant Multiple Law]
+      #align(right)[Product Law]
+      #align(right)[Quotient Law]
+    ]
+  )  
 ]
 
 Using these laws, we can derive a few more :
