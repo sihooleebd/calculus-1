@@ -103,7 +103,7 @@ From the intuitive definition of left/right limits, we can know the following :
 
     Since both limits are equal to $0$, by the Squeeze Theorem, we have :
     $ lim_(x -\u003e 0) x^2 * sin(1/x) = 0 $
-    #cartesian-canvas(
+    #canvas.cartesian-canvas(
       size: (8, 6),
       x-domain: (-0.5, 0.5),
       y-domain: (-0.25, 0.25),
@@ -111,11 +111,11 @@ From the intuitive definition of left/right limits, we can know the following :
       y-tick: 0.1,
       show-grid: true,
       // The squeeze envelope
-      graph(x => x * x, domain: (-0.5, 0.5)),
-      graph(x => -(x * x), domain: (-0.5, 0.5)),
+      graph.graph(x => x * x, domain: (-0.5, 0.5)),
+      graph.graph(x => -(x * x), domain: (-0.5, 0.5)),
       // The squeezed function
-      graph(x => (x * x) * calc.sin(1 / x), domain: (-0.5, -0.0001)),
-      graph(x => (x * x) * calc.sin(1 / x), domain: (0.0001, 0.5)),
+      graph.graph(x => (x * x) * calc.sin(1 / x), domain: (-0.5, -0.0001)),
+      graph.graph(x => (x * x) * calc.sin(1 / x), domain: (0.0001, 0.5)),
     )
   ]
 

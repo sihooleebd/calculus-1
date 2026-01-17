@@ -1,5 +1,5 @@
 /**
- * Noteworthy GUI - Main Application
+ * Noteworthy GUI Solo - Single-user Mode (No Collaboration)
  */
 const app = {
     state: {
@@ -7,14 +7,11 @@ const app = {
         editor: null,
         ws: null,
         configData: {},
-        editorTheme: localStorage.getItem('editorTheme') || 'vs-dark',
-        sessionName: localStorage.getItem('sessionName') || 'Anonymous',
-        previewMode: 'file', // Always file mode
-
-        // Yjs State
-        ydoc: null,
-        yjsProvider: null,
-        yjsBinding: null
+        editorTheme: localStorage.getItem('editorTheme') || 'noteworthy-dark',
+        previewMode: 'partial', // 'partial' = SVG (fast), 'full' = tinymist (synctex)
+        tinymistRunning: false,
+        tinymistUrl: null,
+        soloMode: true // Single-user mode - no Yjs/chat
     },
     // ============================================================
     // INITIALIZATION
@@ -101,6 +98,8 @@ const app = {
         this.debouncedSaveSnippets = this.debounce(() => this.saveSnippets(), 1000);
         this.debouncedSavePreface = this.debounce(() => this.savePreface(), 1000);
         this.debouncedSaveIgnored = this.debounce(() => this.saveIgnored(), 1000);
+        // Solo mode: debounced direct file save
+        this.debouncedSaveFile = this.debounce(() => this.saveCurrentFile(), 500);
 
         // Apply saved CSS theme to body on page load
         const savedTheme = this.state.editorTheme;
@@ -699,12 +698,104 @@ const app = {
                 });
             });
 
+            // Register Typst language for .typ files
+            monaco.languages.register({ id: 'typst' });
+            monaco.languages.setMonarchTokensProvider('typst', {
+                defaultToken: '',
+                tokenPostfix: '.typst',
+
+                keywords: [
+                    'let', 'set', 'show', 'if', 'else', 'for', 'while', 'import', 'include',
+                    'return', 'break', 'continue', 'in', 'not', 'and', 'or', 'none', 'auto',
+                    'true', 'false'
+                ],
+
+                typeKeywords: [
+                    'int', 'float', 'str', 'bool', 'array', 'dictionary', 'content', 'function'
+                ],
+
+                operators: [
+                    '=', '+', '-', '*', '/', '<', '>', '<=', '>=', '==', '!=', '=>', ':', '..'
+                ],
+
+                symbols: /[=><!~?:&|+\-*\/\^%]+/,
+
+                tokenizer: {
+                    root: [
+                        // Function calls: #name or #name( or #name[
+                        [/#[a-zA-Z_][\w-]*/, 'keyword'],
+
+                        // Math mode: $...$
+                        [/\$/, { token: 'string.math', next: '@math' }],
+
+                        // Strings
+                        [/"([^"\\]|\\.)*$/, 'string.invalid'],  // Unterminated string
+                        [/"/, { token: 'string.quote', next: '@string' }],
+
+                        // Comments
+                        [/\/\/.*$/, 'comment'],
+                        [/\/\*/, { token: 'comment', next: '@comment' }],
+
+                        // Labels and references
+                        [/<[a-zA-Z_][\w-]*>/, 'type.identifier'],
+                        [/@[a-zA-Z_][\w-]*/, 'type.identifier'],
+
+                        // Numbers
+                        [/\d+\.?\d*(em|pt|cm|mm|in|%)?/, 'number'],
+
+                        // Identifiers and keywords
+                        [/[a-zA-Z_][\w-]*/, {
+                            cases: {
+                                '@keywords': 'keyword',
+                                '@typeKeywords': 'type',
+                                '@default': 'identifier'
+                            }
+                        }],
+
+                        // Brackets
+                        [/[{}()\[\]]/, '@brackets'],
+
+                        // Operators
+                        [/@symbols/, {
+                            cases: {
+                                '@operators': 'operator',
+                                '@default': ''
+                            }
+                        }],
+
+                        // Whitespace
+                        { include: '@whitespace' },
+                    ],
+
+                    math: [
+                        [/\$/, { token: 'string.math', next: '@pop' }],
+                        [/./, 'string.math']
+                    ],
+
+                    string: [
+                        [/[^\\"]+/, 'string'],
+                        [/\\./, 'string.escape'],
+                        [/"/, { token: 'string.quote', next: '@pop' }]
+                    ],
+
+                    comment: [
+                        [/[^\/*]+/, 'comment'],
+                        [/\*\//, { token: 'comment', next: '@pop' }],
+                        [/[\/*]/, 'comment']
+                    ],
+
+                    whitespace: [
+                        [/[ \t\r\n]+/, 'white'],
+                    ],
+                }
+            });
+
             // Use saved theme or default to noteworthy-dark
             const themeToUse = this.state.editorTheme || 'noteworthy-dark';
 
             this.state.editor = monaco.editor.create(document.getElementById('monaco-container'), {
                 value: '',
-                language: 'markdown',
+                language: 'typst',
                 theme: themeToUse,
                 automaticLayout: true,
                 fontSize: 14,
@@ -716,24 +807,7 @@ const app = {
                 scrollBeyondLastLine: false
             });
 
-            // Yjs-based Cursor Awareness
-            this.state.editor.onDidChangeCursorSelection((e) => {
-                if (this.state.yjsProvider && this.state.yjsProvider.awareness) {
-                    const pos = e.selection.getPosition();
-                    const sel = e.selection;
-
-                    this.state.yjsProvider.awareness.setLocalStateField('cursor', {
-                        line: pos.lineNumber,
-                        column: pos.column,
-                        selection: !sel.isEmpty() ? {
-                            startLine: sel.startLineNumber,
-                            startColumn: sel.startColumn,
-                            endLine: sel.endLineNumber,
-                            endColumn: sel.endColumn
-                        } : null
-                    });
-                }
-            });
+            // Solo mode: no cursor awareness needed (single user)
 
             // ============================================================
             // SMART EDITOR BEHAVIORS
@@ -943,6 +1017,7 @@ const app = {
         const resizer = document.getElementById('editor-resizer');
         const previewPanel = document.querySelector('.preview-panel');
         const mainContent = document.querySelector('.main-content');
+        const previewContainer = document.getElementById('preview-container');
 
         if (!resizer || !previewPanel || !mainContent) return;
 
@@ -953,6 +1028,14 @@ const app = {
             resizer.classList.add('active');
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none';
+
+            // Disable pointer events on preview iframes to prevent them from capturing mouse events during resize
+            if (previewContainer) {
+                const iframes = previewContainer.querySelectorAll('iframe');
+                iframes.forEach(iframe => {
+                    iframe.style.pointerEvents = 'none';
+                });
+            }
         });
 
         document.addEventListener('mousemove', (e) => {
@@ -984,6 +1067,14 @@ const app = {
                 resizer.classList.remove('active');
                 document.body.style.cursor = '';
                 document.body.style.userSelect = '';
+
+                // Re-enable pointer events on preview iframes
+                if (previewContainer) {
+                    const iframes = previewContainer.querySelectorAll('iframe');
+                    iframes.forEach(iframe => {
+                        iframe.style.pointerEvents = '';
+                    });
+                }
 
                 // Final layout update
                 if (this.state.editor) this.state.editor.layout();
@@ -1378,14 +1469,13 @@ const app = {
         if (!newPath || newPath === path) return;
 
         try {
-            // Use rename API since it supports full path changes
             const res = await fetch('/api/rename', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     path,
                     newName: newPath.split('/').pop(),
-                    newPath: newPath  // Full new path
+                    newPath: newPath
                 })
             });
             const result = await res.json();
@@ -1393,7 +1483,6 @@ const app = {
             if (result.success) {
                 this.showSaveStatus('File Moved');
                 this.refreshTree();
-                // Update active file if it was moved
                 if (this.state.activeFile === path) {
                     this.state.activeFile = result.newPath || newPath;
                     document.getElementById('active-filename').textContent = result.newPath || newPath;
@@ -1551,170 +1640,41 @@ const app = {
             }
         }
 
-        // Initialize Yjs for Real-time Collaboration
+
+        // ==========================================
+        // SOLO MODE: Direct File Loading (No Yjs)
         // ==========================================
 
-        // 1. Cleanup previous Yjs
-        if (this.state.yjsBinding) {
-            this.state.yjsBinding.destroy();
-            this.state.yjsBinding = null;
-        }
-        if (this.state.yjsProvider) {
-            this.state.yjsProvider.destroy();
-            this.state.yjsProvider = null;
-        }
-        if (this.state.ydoc) {
-            this.state.ydoc.destroy();
-        }
+        // Simply load the file content via API
+        try {
+            const res = await fetch(`/api/file?path=${encodeURIComponent(path)}`);
+            const data = await res.json();
 
-        // 2. Clear editor content before connecting to avoid flashes/conflicts
-        if (this.state.editor) {
-            this.state.editor.setValue('');
-            this.state.editor.updateOptions({ readOnly: true }); // Lock until synced
-        }
-
-        // 3. Create new Yjs Doc
-        this.state.ydoc = new Y.Doc();
-
-        // 4. Connect Provider
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // Connect to Yjs WebSocket
-        // Note: WebsocketProvider joins the room name to the URL if not empty? 
-        // Actually standard y-websocket connects to url/roomname?
-        // Let's use the base Yjs endpoint.
-        const wsUrl = `${wsProtocol}//${window.location.host}/yjs`;
-
-        console.log(`[Yjs] Connecting to ${wsUrl}, room: ${path}`);
-
-        // Disconnect old provider if exists
-        if (this.state.yjsProvider) {
-            this.state.yjsProvider.destroy();
-        }
-
-        this.state.yjsProvider = new WebsocketProvider(
-            wsUrl,
-            path, // room name
-            this.state.ydoc,
-            { maxBackoffTime: 2500, disableBc: true } // Reduce backoff for faster local retry
-        );
-
-        // Debug logging for Yjs Provider
-        this.state.yjsProvider.on('status', event => {
-            console.log(`[Yjs] Status: ${event.status}`);
-            if (event.status === 'connected') {
-                if (this.state.editor) this.state.editor.updateOptions({ readOnly: false });
+            if (this.state.editor && data.content !== undefined) {
+                this.state.editor.setValue(data.content);
+                document.getElementById('save-status').textContent = 'Loaded';
+                setTimeout(() => document.getElementById('save-status').textContent = '', 1500);
             }
-        });
+        } catch (err) {
+            console.error('[Solo] Error loading file:', err);
+        }
 
-        this.state.yjsProvider.on('sync', isSynced => {
-            console.log(`[Yjs] Sync status: ${isSynced}`);
-        });
-
-        // Log outgoing/incoming messages
-        // Note: this requires accessing the internal `ws` property, which might not always be available immediately
-        // or stable across y-websocket versions.
-        // It's generally better to rely on the provider's 'status' and 'sync' events for debugging.
-        // However, if direct websocket message logging is needed, ensure `ws` is initialized.
-        if (this.state.yjsProvider.ws) {
-            this.state.yjsProvider.ws.binaryType = 'arraybuffer'; // Enforce binaryType
-
-            const originalSend = this.state.yjsProvider.ws.send;
-            this.state.yjsProvider.ws.send = function (data) {
-                console.log(`[YjsClient] >>> SEND ${data.byteLength || data.length} bytes`);
-                originalSend.apply(this, arguments);
-            };
-
-            this.state.yjsProvider.ws.addEventListener('message', (event) => {
-                let size = 0;
-                let type = 'unknown';
-                if (event.data instanceof ArrayBuffer) {
-                    size = event.data.byteLength;
-                    type = 'ArrayBuffer';
-                } else if (event.data instanceof Blob) {
-                    size = event.data.size;
-                    type = 'Blob';
-                } else if (typeof event.data === 'string') {
-                    size = event.data.length;
-                    type = 'String';
+        // Setup content change listener for auto-save
+        if (this.state.editor && !this.state.editor._soloChangeListener) {
+            this.state.editor._soloChangeListener = this.state.editor.onDidChangeModelContent(() => {
+                if (this.state.activeFile) {
+                    document.getElementById('save-status').textContent = 'Editing...';
+                    this.debouncedSaveFile();
                 }
-                console.log(`[YjsClient] <<< RECV ${size} bytes (Type: ${type})`);
             });
         }
 
-        // 5. Setup Awareness (Cursors)
-        this.state.yjsProvider.awareness.setLocalStateField('user', {
-            name: this.state.sessionName,
-            color: this.getUserColor(this.state.yjsProvider.awareness.clientID || 0)
-        });
-
-        this.state.yjsProvider.awareness.on('change', () => {
-            this.updateRemoteCursors();
-        });
-
-        // 6. Bind to Monaco IMMEDIATELY
-        const ytext = this.state.ydoc.getText('content');
-
-        if (this.state.editor) {
-            console.log('[Yjs] Creating MonacoBinding...');
-
-            // Debug: Monitor Yjs updates
-            ytext.observe(event => {
-                const content = ytext.toString();
-                console.log(`[Yjs] Text updated (len=${content.length}):`, content.substring(0, 50) + '...');
-                console.log('[Yjs] Delta:', JSON.stringify(event.delta));
-            });
-
-            console.log('DEBUG: ytext length:', ytext.length);
-            // console.log('DEBUG: ytext content:', ytext.toString());
-            try {
-                // TEMPORARILY DISABLED TO DEBUG SYNC
-                // this.state.yjsBinding = new MonacoBinding(
-                //     ytext,
-                //     this.state.editor.getModel(),
-                //     new Set([this.state.editor]),
-                //     this.state.yjsProvider.awareness
-                // );
-                console.log('[Yjs] MonacoBinding PAUSED for debugging');
-
-                this.state.yjsProvider.on('sync', isSynced => {
-                    console.log('[Yjs] Sync event:', isSynced);
-                    if (isSynced) {
-                        this.state.editor.updateOptions({ readOnly: false });
-                    }
-                });
-            } catch (e) {
-                console.error('[Yjs] Error creating MonacoBinding:', e);
-            }
-        }
-
-        this.state.yjsProvider.on('sync', (isSynced) => {
-            console.log(`[Yjs] Sync event: ${isSynced}`);
-            if (isSynced) {
-                if (this.state.editor) {
-                    // this.state.editor.updateOptions({ readOnly: false }); // This is now handled in the try block
-                    document.getElementById('save-status').textContent = 'Synced';
-                }
-            }
-        });
-
-        this.state.yjsProvider.on('status', (event) => {
-            console.log(`[Yjs] Status: ${event.status}`);
-            if (event.status === 'connected') {
-                document.getElementById('save-status').textContent = 'Live';
-            } else {
-                document.getElementById('save-status').textContent = 'Offline';
-            }
-        });
-
-        // 7. Join DocumentHub for Presence (Chat/Diagnostics/Preview)
-        // We still use the main socket for non-content features
-        if (this.state.docSocket && this.state.docSocket.readyState === WebSocket.OPEN) {
-            this.state.docSocket.send(JSON.stringify({
-                type: 'join',
-                path: path
-            }));
+        // Start tinymist preview for .typ files (synctex-enabled)
+        if (path.endsWith('.typ')) {
+            this.startTinymistPreview(path);
         }
     },
+
 
     saveCurrentFile: async function () {
         if (!this.state.activeFile) return;
@@ -1730,6 +1690,9 @@ const app = {
 
         document.getElementById('save-status').textContent = 'Saved';
         setTimeout(() => document.getElementById('save-status').textContent = '', 2000);
+
+        // Refresh diagnostics after save
+        this.checkDiagnostics();
     },
 
 
@@ -2484,29 +2447,68 @@ const app = {
 
     renderModulesTab: async function (container) {
         const res = await fetch('/api/modules');
-        const modules = await res.json();
-        console.log("Modules data:", modules);
+        const data = await res.json();
+        console.log("Modules data:", data);
+
+        const { installed, remote, conflicts, updates_available } = data;
+
+        // Build conflict warning HTML
+        let conflictHtml = '';
+        if (conflicts && conflicts.length > 0) {
+            const conflictItems = conflicts.map(c =>
+                `<div class="conflict-item"><i data-lucide="alert-triangle"></i> ${c.message}</div>`
+            ).join('');
+            conflictHtml = `
+                <div class="warning-banner">
+                    <div class="warning-header"><i data-lucide="alert-circle"></i> Module Conflicts Detected</div>
+                    <div class="conflict-list">${conflictItems}</div>
+                </div>
+            `;
+        }
 
         container.innerHTML = `
+            ${conflictHtml}
             <div class="config-section">
-                <h3>Installed Modules</h3>
+                <div class="section-header">
+                    <h3>Installed Modules</h3>
+                    <button class="btn btn-secondary btn-sm" onclick="app.syncModules()">
+                        <i data-lucide="refresh-cw"></i> Sync
+                    </button>
+                </div>
                 <p>Modules extend Noteworthy with additional features</p>
                 <div id="modules-list"></div>
             </div>
+            <div class="config-section" id="remote-modules-section" style="display: ${Object.keys(remote || {}).length > 0 ? 'block' : 'none'}">
+                <h3>Available from Remote</h3>
+                <p>These modules can be installed from the repository</p>
+                <div id="remote-modules-list"></div>
+            </div>
         `;
 
+        // Render installed modules
         const list = document.getElementById('modules-list');
-        Object.entries(modules).forEach(([name, info]) => {
+        Object.entries(installed || {}).forEach(([name, info]) => {
             const cleanName = name.split('/').pop();
             const el = document.createElement('div');
             el.className = 'list-item module-item';
 
-            let actionHtml = '';
+            const hasUpdate = (updates_available || []).includes(name);
+
+            let configBtn = '';
             if (info.has_config) {
-                // Pass full name to configureModule
-                actionHtml = `
+                configBtn = `
                     <button onclick="app.configureModule('${name}')" class="icon-btn" title="Configure">
                         <i data-lucide="settings"></i>
+                    </button>
+                `;
+            }
+
+            // Update button inline with status
+            let updateBtn = '';
+            if (hasUpdate) {
+                updateBtn = `
+                    <button onclick="app.updateModule('${name}')" class="btn btn-accent btn-sm" title="Update to latest version">
+                        <i data-lucide="download"></i> Update
                     </button>
                 `;
             }
@@ -2514,17 +2516,135 @@ const app = {
             el.innerHTML = `
                 <div class="module-info">
                     <div class="module-name">${cleanName}</div>
+                    <div class="module-description">${info.description || ''}</div>
                     <div class="module-meta">
                         <span class="module-source">${info.source}</span>
                         <span class="module-status">${info.status.toUpperCase()}</span>
+                        ${updateBtn}
                     </div>
                 </div>
-                ${actionHtml}
+                ${configBtn}
             `;
             list.appendChild(el);
         });
 
+        // Render remote (available for install) modules
+        const remoteList = document.getElementById('remote-modules-list');
+        Object.entries(remote || {}).forEach(([name, info]) => {
+            const el = document.createElement('div');
+            el.className = 'list-item module-item remote-module';
+
+            el.innerHTML = `
+                <div class="module-info">
+                    <div class="module-name">${name}</div>
+                    <div class="module-description">${info.description || ''}</div>
+                    ${info.dependencies?.length ? `<div class="module-deps">Requires: ${info.dependencies.join(', ')}</div>` : ''}
+                </div>
+                <button onclick="app.installModule('${name}')" class="btn btn-primary btn-sm">
+                    <i data-lucide="download"></i> Install
+                </button>
+            `;
+            remoteList.appendChild(el);
+        });
+
         if (window.lucide) lucide.createIcons();
+    },
+
+    installModule: async function (name) {
+        const btn = event.target.closest('button');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader"></i> Installing...';
+            if (window.lucide) lucide.createIcons();
+        }
+
+        try {
+            const res = await fetch('/api/modules/install', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ modules: [name] })
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                this.showSaveStatus(`Installed: ${name}`);
+                // Refresh the modules tab using the correct container
+                const container = document.getElementById('config-content');
+                if (container) this.renderModulesTab(container);
+            } else {
+                alert('Install failed: ' + (result.error || 'Unknown error'));
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="download"></i> Install';
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        } catch (e) {
+            alert('Install failed: ' + e.message);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="download"></i> Install';
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+    },
+
+    syncModules: async function () {
+        this.showSaveStatus('Syncing modules...');
+        try {
+            const res = await fetch('/api/modules/sync', { method: 'POST' });
+            const result = await res.json();
+
+            if (result.success) {
+                this.showSaveStatus(`Synced: ${result.modules_count} modules`);
+                // Refresh the modules tab using the correct container
+                const container = document.getElementById('config-content');
+                if (container) this.renderModulesTab(container);
+            } else {
+                this.showSaveStatus('Sync failed');
+            }
+        } catch (e) {
+            this.showSaveStatus('Sync failed');
+        }
+    },
+
+    updateModule: async function (name) {
+        const btn = event.target.closest('button');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader"></i> Updating...';
+            if (window.lucide) lucide.createIcons();
+        }
+
+        try {
+            // Use the install endpoint - it will update if already present
+            const res = await fetch('/api/modules/install', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ modules: [name] })
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                this.showSaveStatus(`Updated: ${name}`);
+                const container = document.getElementById('config-content');
+                if (container) this.renderModulesTab(container);
+            } else {
+                alert('Update failed: ' + (result.error || 'Unknown error'));
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="download"></i> Update';
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        } catch (e) {
+            alert('Update failed: ' + e.message);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="download"></i> Update';
+                if (window.lucide) lucide.createIcons();
+            }
+        }
     },
 
     // ============================================================
@@ -2744,6 +2864,15 @@ const app = {
     // UNIFIED WEBSOCKET - Sync, Cursors, Preview, Diagnostics
     // ============================================================
 
+    joinFile: function (path) {
+        if (this.state.docSocket && this.state.docSocket.readyState === WebSocket.OPEN) {
+            this.state.docSocket.send(JSON.stringify({
+                type: 'join',
+                path: path
+            }));
+        }
+    },
+
     connectDocSocket: function () {
         if (this.state.wsRetryCount === undefined) {
             this.state.wsRetryCount = 0;
@@ -2763,17 +2892,21 @@ const app = {
             this.state.docSocket = new WebSocket(`${protocol}//${window.location.host}/ws/doc?name=${name}&id=${clientId}`);
 
             this.state.docSocket.onopen = () => {
-                console.log('[Doc] Connected');
+                console.log(`[${new Date().toLocaleTimeString()}] [Doc] Connected`);
                 this.state.wsRetryCount = 0;
 
                 // Rejoin current file if we have one
                 if (this.state.activeFile) {
-                    this.joinFile(this.state.activeFile);
+                    this.state.docSocket.send(JSON.stringify({
+                        type: 'join',
+                        path: this.state.activeFile
+                    }));
                 }
             };
 
             this.state.docSocket.onmessage = (e) => {
-                console.log(`[DocSocket] <<< RECV ${e.data.length} chars: ${e.data.substring(0, 50)}...`);
+                const ts = new Date().toLocaleTimeString();
+                console.log(`[${ts}] [DocSocket] <<< RECV ${e.data.length} chars: ${e.data.substring(0, 50)}...`);
                 const msg = JSON.parse(e.data);
                 this.handleDocMessage(msg);
             };
@@ -2781,7 +2914,7 @@ const app = {
             this.state.docSocket.onclose = () => {
                 const delay = Math.min(2000 * Math.pow(2, this.state.wsRetryCount), 30000);
                 this.state.wsRetryCount++;
-                console.log(`[Doc] Disconnected, reconnecting in ${delay / 1000}s...`);
+                console.log(`[${new Date().toLocaleTimeString()}] [Doc] Disconnected, reconnecting in ${delay / 1000}s...`);
                 setTimeout(() => this.connectDocSocket(), delay);
             };
 
@@ -2824,7 +2957,7 @@ const app = {
                 if (this.state.editor) {
                     this.state.applyingRemote = true;
                     const ext = this.state.activeFile?.split('.').pop() || 'typ';
-                    const lang = ext === 'typ' ? 'markdown' : (ext === 'json' ? 'json' : 'plaintext');
+                    const lang = ext === 'typ' ? 'typst' : (ext === 'json' ? 'json' : 'plaintext');
                     monaco.editor.setModelLanguage(this.state.editor.getModel(), lang);
                     // Content is now loaded by Yjs
                     // this.state.editor.setValue(msg.content);
@@ -3302,11 +3435,15 @@ const app = {
             if (svgElement) {
                 svgElement.style.width = '100%';
                 svgElement.style.height = 'auto';
-                svgElement.style.cursor = 'pointer';
+                // Remove global pointer cursor to allow text selection
+                // Users must Ctrl+Click or Cmd+Click to navigate
 
                 // Add click handler for text elements
                 svgElement.addEventListener('click', (e) => {
-                    this.handlePreviewClick(e);
+                    // Only navigate if modifier key is pressed
+                    if (e.ctrlKey || e.metaKey) {
+                        this.handlePreviewClick(e);
+                    }
                 });
             }
         });
@@ -3390,6 +3527,88 @@ const app = {
     },
 
     // ============================================================
+    // TINYMIST PREVIEW (Synctex-like navigation)
+    // ============================================================
+
+    startTinymistPreview: async function (path) {
+        const container = document.getElementById('preview-container');
+
+        // Show loading state
+        container.innerHTML = `
+            <div class="preview-loading" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                <span style="color: var(--text-secondary);">Loading preview...</span>
+            </div>
+        `;
+
+        // Stop existing tinymist if running (we need to restart with new target)
+        if (this.state.tinymistRunning) {
+            await this.stopTinymistPreview();
+        }
+
+        // Start tinymist with the target file
+        try {
+            const res = await fetch('/api/tinymist/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: path })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                this.state.tinymistRunning = true;
+                this.state.tinymistUrl = data.url;
+
+                // Wait for tinymist to be ready
+                await new Promise(r => setTimeout(r, 1500));
+
+                // Show tinymist iframe
+                container.innerHTML = `
+                    <iframe 
+                        id="tinymist-iframe"
+                        src="${data.url}" 
+                        style="width: 100%; height: 100%; border: none; border-radius: 16px;"
+                        title="Tinymist Preview"
+                    ></iframe>
+                `;
+            } else {
+                console.error('[Tinymist] Failed to start:', data.error);
+                container.innerHTML = `
+                    <div class="preview-placeholder">
+                        <i data-lucide="alert-circle"></i>
+                        <span>Preview failed to start</span>
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
+            }
+        } catch (e) {
+            console.error('[Tinymist] Error:', e);
+            container.innerHTML = `
+                <div class="preview-placeholder">
+                    <i data-lucide="alert-circle"></i>
+                    <span>Preview error</span>
+                </div>
+            `;
+            if (window.lucide) lucide.createIcons();
+        }
+    },
+
+    stopTinymistPreview: async function () {
+        if (this.state.tinymistRunning) {
+            try {
+                await fetch('/api/tinymist/stop', { method: 'POST' });
+                this.state.tinymistRunning = false;
+                this.state.tinymistUrl = null;
+                if (this.state.tinymistWs) {
+                    this.state.tinymistWs.close();
+                    this.state.tinymistWs = null;
+                }
+            } catch (e) {
+                console.error('[Tinymist] Error stopping:', e);
+            }
+        }
+    },
+
+    // ============================================================
     // STATUS
     // ============================================================
 
@@ -3416,16 +3635,8 @@ const app = {
 
         container.innerHTML = `
             <div class="config-section">
-                <h3>Session Settings</h3>
-                <p>Configure your appearance in collaboration sessions</p>
-                
-                <div class="form-group">
-                    <label>Display Name</label>
-                    <input type="text" id="session-name" value="${this.state.sessionName}" oninput="app.updateSessionName(this.value)" placeholder="Anonymous">
-                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
-                        This name will be visible to other users editing the same file. It is saved in your browser storage.
-                    </p>
-                </div>
+                <h3>Editor Settings</h3>
+                <p>Customize your editor appearance</p>
 
                 <div class="form-group">
                     <label>Editor Theme</label>
@@ -3476,7 +3687,7 @@ const app = {
                     Created by <strong>Benjamin Lee</strong> & <strong>Hojun Lee</strong>
                 </p>
                 <p style="font-size: 11px; color: var(--text-muted);">
-                    © 2024-2026 · Built with Typst, Tinymist, FastAPI, Monaco, and a LOT of coffee. 
+                    © 2025-2026 · Built with Typst, Tinymist, FastAPI, Monaco, and a LOT of coffee. 
                 </p>
             </div>
             
@@ -3751,6 +3962,42 @@ const app = {
     scrollChatToBottom: function () {
         const container = document.getElementById('chat-messages');
         container.scrollTop = container.scrollHeight;
+    },
+
+    // ============================================================
+    // LOG PANEL
+    // ============================================================
+
+    toggleLogPanel: function () {
+        const panel = document.getElementById('log-panel');
+        if (panel) {
+            panel.classList.toggle('hidden');
+        }
+    },
+
+    clearLogs: function () {
+        const container = document.getElementById('log-messages');
+        if (container) {
+            container.innerHTML = '';
+        }
+    },
+
+    // ============================================================
+    // PREVIEW SYNC (placeholder - tinymist handles this internally)
+    // ============================================================
+
+    syncPreviewScroll: function () {
+        // Tinymist preview handles its own scroll sync via WebSocket
+        // This is a placeholder for the button click
+        console.log('[Preview] Sync scroll requested (handled by tinymist)');
+
+        // Try to send a sync message to the tinymist iframe if available
+        const iframe = document.getElementById('tinymist-iframe');
+        if (iframe && iframe.contentWindow) {
+            // Tinymist doesn't expose a public API for this,
+            // but the cursor position is automatically synced
+            this.showSaveStatus('Sync requested');
+        }
     }
 };
 

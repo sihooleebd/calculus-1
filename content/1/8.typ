@@ -34,18 +34,18 @@ If these conditions are not met, we call the function is "discontinuous" at $x =
     Thus, the function is discontinuous at $x = 2$.
   ]
 
-  #cartesian-canvas(
+  #canvas.cartesian-canvas(
     size: (8, 5),
     x-domain: (-1, 5),
     y-domain: (-1, 6),
     show-grid: true,
     // f(x) = (x²-x-2)/(x-2) = x+1 for x ≠ 2
-    graph(x => x + 1, domain: (-1, 1.95), hole: (2,), label: $f(x) = (x^2-x-2)/(x-2)$),
+    graph.graph(x => x + 1, domain: (-1, 1.95), hole: (2,), label: $f(x) = (x^2-x-2)/(x-2)$),
 
-    graph(x => x + 1, domain: (2.05, 5)),
+    graph.graph(x => x + 1, domain: (2.05, 5)),
     // Show the hole at (2, 3) - use hollow point
     // Defined point at (2, 1)
-    point(2, 1, label: "f(2) = 1"),
+    graph.point(2, 1, label: "f(2) = 1"),
   )
 ]
 
@@ -89,17 +89,17 @@ Using this info, we can create the following definition :
                           & = 1 = f(1) $. Thus, $f$ is left continuous at $x = 1$.
       Therefore, $f$ is continuous on the closed interval $[-1, 1]$.
 
-    #cartesian-canvas(
+    #canvas.cartesian-canvas(
       size: (8, 5),
       x-domain: (-1.5, 1.5),
       y-domain: (-0.5, 1.5),
       show-grid: true,
       // f(x) = 1 - sqrt(1 - x²) - this is a lower semicircle shifted up
-      graph(x => 1 - calc.sqrt(1 - calc.pow(x, 2)), domain: (-0.999, 0.999), label: $f(x) = 1 - sqrt(1-x^2)$),
+      graph.graph(x => 1 - calc.sqrt(1 - calc.pow(x, 2)), domain: (-0.999, 0.999), label: $f(x) = 1 - sqrt(1-x^2)$),
       // Mark the endpoints
-      point(-1, 1, label: $(-1, 1)$),
-      point(1, 1, label: $(1, 1)$),
-      point(0, 0, label: $(0, 0)$),
+      graph.point(-1, 1, label: $(-1, 1)$),
+      graph.point(1, 1, label: $(1, 1)$),
+      graph.point(0, 0, label: $(0, 0)$),
     )
   ]
 ]
@@ -156,19 +156,19 @@ You may have noticed that we didnt even care about continuity during polynomials
     Since the function is a rational function and $2$ is in the domain of the function, we can use the Continuity of Rational Functions theorem.
 
     $lim_(x->-2) (x^3 + 2x^2 - 1)/(5 - 3x) = (-2^3 + 2*(-2)^2 - 1)/(5 - 3*(-2)) = (-8 + 8 - 1)/(5 + 6) = -1/11$
-    #cartesian-canvas(
+    #canvas.cartesian-canvas(
       size: (8, 5),
       x-domain: (-3, 1),
       y-domain: (-0.25, 0.25),
       show-grid: true,
       // f(x) = (x^3 + 2x^2 - 1)/(5 - 3x)
-      graph(
+      graph.graph(
         x => (calc.pow(x, 3) + 2 * calc.pow(x, 2) - 1) / (5 - 3 * x),
         domain: (-3, 1),
         label: $f(x) = (x^3 + 2x^2 - 1)/(5 - 3x)$,
       ),
       // Mark the point at (-2, -1/11)
-      point(-2, -1 / 11, label: $(-2, -1/11)$),
+      graph.point(-2, -1 / 11, label: $(-2, -1/11)$),
     )
   ]
 ]
@@ -191,17 +191,17 @@ The Intermediate Value Theorem is a very useful theorem that utilizes the proper
     $f(1) = 1^3 + 1 - 1 = 1$
     Since $f(0) = -1$ and $f(1) = 1$, and $0$ is between $-1$ and $1$, by the Intermediate Value Theorem, there exists at least one number $c$ in the interval $(0, 1)$ such that $f(c) = 0$.
     Therefore, the equation $x^3 + x - 1 = 0$ has a solution in the interval $[0, 1]$.
-    #cartesian-canvas(
+    #canvas.cartesian-canvas(
       size: (8, 5),
       x-domain: (-0.5, 1.5),
       y-domain: (-1.5, 1.5),
       show-grid: true,
       // f(x) = x^3 + x - 1
-      graph(x => calc.pow(x, 3) + x - 1, domain: (-0.5, 1.5), label: $f(x) = x^3 + x - 1$),
+      graph.graph(x => calc.pow(x, 3) + x - 1, domain: (-0.5, 1.5), label: $f(x) = x^3 + x - 1$),
       // Mark the points at (0, -1) and (1, 1)
-      point(0, -1, label: $(0, -1)$),
-      point(1, 1, label: $(1, 1)$),
-      point(0.6823, 0, label: $(c, 0)$),
+      graph.point(0, -1, label: $(0, -1)$),
+      graph.point(1, 1, label: $(1, 1)$),
+      graph.point(0.6823, 0, label: $(c, 0)$),
     )
   ]
 

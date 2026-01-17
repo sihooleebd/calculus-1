@@ -19,6 +19,13 @@ class PreviewManager:
         # Maps path -> {process, thread, ref_count, cache_dir}
         self.watchers = {}
         self.callbacks = []
+        self.log_callbacks = []  # For error log broadcasting
+        
+        # Full preview state
+        self.full_preview_process = None
+        self.full_preview_thread = None
+        self.full_preview_running = False
+        self.full_preview_port = None  # Dynamic port for tinymist
         
         # Base cache directory
         self.base_cache_dir = BASE_DIR / "build" / ".preview_cache"
@@ -28,6 +35,31 @@ class PreviewManager:
             except:
                 pass
         self.base_cache_dir.mkdir(parents=True, exist_ok=True)
+    
+    def _find_available_port(self, start_port: int = 23625, max_attempts: int = 100):
+        """Find an available port starting from start_port."""
+        import socket
+        for offset in range(max_attempts):
+            port = start_port + offset
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.bind(('127.0.0.1', port))
+                    return port
+            except OSError:
+                continue
+        return None
+    
+    def _find_tinymist(self):
+        """Find tinymist binary."""
+        possible_paths = [
+            os.path.expanduser("~/.cargo/bin/tinymist"),
+            "/usr/local/bin/tinymist",
+            "tinymist"
+        ]
+        for p in possible_paths:
+            if shutil.which(p) or Path(p).exists():
+                return p
+        return "tinymist"
     
     def _find_typst(self):
         """Find typst binary."""
@@ -197,6 +229,47 @@ class PreviewManager:
         """Register callback for updates."""
         self.callbacks.append(cb)
     
+    def cleanup_old_watchers(self, keep_paths: list = None, max_watchers: int = 3):
+        """
+        Cleanup old watchers, keeping only the most recent ones.
+        This implements LRU-style caching to avoid cold starts on file switch.
+        """
+        keep_paths = keep_paths or []
+        current_count = len(self.watchers)
+        
+        if current_count <= max_watchers:
+            return
+        
+        # Find watchers to remove (those not in keep_paths)
+        to_remove = []
+        for path in self.watchers:
+            if path not in keep_paths:
+                to_remove.append(path)
+        
+        # Remove oldest watchers until we're at max_watchers
+        while len(self.watchers) > max_watchers and to_remove:
+            oldest_path = to_remove.pop(0)
+            print(f"[Preview] Evicting old watcher: {oldest_path}")
+            self._force_stop_watch(oldest_path)
+    
+    def _force_stop_watch(self, file_path: str):
+        """Force stop a watcher without ref count check."""
+        if file_path not in self.watchers:
+            return
+        
+        watcher = self.watchers[file_path]
+        watcher['running'] = False
+        if watcher.get('process'):
+            try:
+                watcher['process'].terminate()
+            except:
+                pass
+        try:
+            shutil.rmtree(watcher['cache_dir'])
+        except:
+            pass
+        del self.watchers[file_path]
+    
     def _monitor_loop(self, file_path, watcher):
         """Monitor cache directory for SVG updates."""
         last_mtimes = {}
@@ -247,14 +320,15 @@ class PreviewManager:
                 watcher['page_mapping'] = sorted(current_pages)
                 
                 if updates:
+                    print(f"[Debug] Found {len(updates)} updates for {file_path}")
                     for cb in self.callbacks:
                         try:
                             # Pass file_path so hub knows who to send it to
                             cb(updates, file_path)
                         except Exception as e:
                             print(f"[Preview] Callback error: {e}")
-            except:
-                pass
+            except Exception as e:
+                print(f"[Debug] Monitor loop error: {e}")
             
             time.sleep(0.02)
     
@@ -275,3 +349,164 @@ class PreviewManager:
         if file_path in self.watchers:
             return self.watchers[file_path]['preview_cache'].get(int(page_num))
         return None
+    
+    # ============================================================
+    # Full Document Preview (tinymist)
+    # ============================================================
+    
+    def add_log_callback(self, cb):
+        """Register callback for log messages (for broadcasting to clients)."""
+        self.log_callbacks.append(cb)
+    
+    def _broadcast_log(self, level: str, message: str):
+        """Broadcast a log message to all registered callbacks."""
+        for cb in self.log_callbacks:
+            try:
+                cb(level, message)
+            except Exception as e:
+                print(f"[Preview] Log callback error: {e}")
+    
+    def start_full_preview(self, file_path: str = None):
+        """Start the document preview using tinymist with optional target."""
+        if self.full_preview_running:
+            print("[Preview] Full preview already running")
+            return self.get_full_preview_url()
+        
+        tinymist_bin = self._find_tinymist()
+        parser_file = BASE_DIR / "templates" / "core" / "parser.typ"
+        
+        if not parser_file.exists():
+            print(f"[Preview] Parser file not found: {parser_file}")
+            self._broadcast_log("error", f"Parser file not found: {parser_file}")
+            return None
+        
+        # Build content info for inputs
+        import json
+        content_dir = BASE_DIR / "content"
+        chapter_folders = []
+        page_folders = {}
+        
+        if content_dir.exists():
+            ch_dirs = sorted(
+                [d for d in content_dir.iterdir() if d.is_dir() and d.name.replace('.', '', 1).lstrip('-').isdigit()],
+                key=lambda d: float(d.name) if d.name.replace('.', '', 1).lstrip('-').isdigit() else 999
+            )
+            for idx, ch_dir in enumerate(ch_dirs):
+                chapter_folders.append(ch_dir.name)
+                pg_files = sorted(
+                    [f.stem for f in ch_dir.glob("*.typ") if f.stem.replace('.', '', 1).lstrip('-').isdigit()],
+                    key=lambda s: float(s) if s.replace('.', '', 1).lstrip('-').isdigit() else 999
+                )
+                page_folders[str(idx)] = pg_files
+        
+        # Parse target from file_path (e.g., "content/2/5.typ" -> "2/4")
+        target = None
+        if file_path and file_path.startswith("content/"):
+            parts = file_path.replace("content/", "").replace(".typ", "").split("/")
+            if len(parts) == 2:
+                ch_name = parts[0]
+                pg_name = parts[1]
+                if ch_name in chapter_folders:
+                    ch_idx = chapter_folders.index(ch_name)
+                    pg_files = page_folders.get(str(ch_idx), [])
+                    if pg_name in pg_files:
+                        pg_idx = pg_files.index(pg_name)
+                        target = f"{ch_idx}/{pg_idx}"
+        
+        cmd = [
+            tinymist_bin, "preview", str(parser_file),
+            "--root", str(BASE_DIR),
+            "--input", f"chapter-folders={json.dumps(chapter_folders)}",
+            "--input", f"page-folders={json.dumps(page_folders)}",
+            "--no-open",
+        ]
+        
+        # Find an available port for this instance (data plane and control plane)
+        data_port = self._find_available_port(start_port=23625)
+        if data_port:
+            self.full_preview_port = data_port
+            control_port = self._find_available_port(start_port=data_port + 1)
+            cmd.extend(["--data-plane-host", f"127.0.0.1:{data_port}"])
+            if control_port:
+                cmd.extend(["--control-plane-host", f"127.0.0.1:{control_port}"])
+            print(f"[Preview] Using ports {data_port} (data) / {control_port} (control) for tinymist")
+        else:
+            print("[Preview] Warning: Could not find available port, using default")
+            self.full_preview_port = 23625  # Default tinymist port
+        
+        # Add target if we have one
+        if target:
+            cmd.extend(["--input", f"target={target}"])
+        
+        print(f"[Preview] Starting full preview: {' '.join(cmd)}")
+        
+        try:
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # Combine stderr into stdout for logging
+                text=True,
+                bufsize=1,
+                cwd=str(BASE_DIR)
+            )
+            
+            self.full_preview_process = process
+            self.full_preview_running = True
+            
+            # Start thread to read output and broadcast logs
+            self.full_preview_thread = threading.Thread(
+                target=self._read_full_preview_output,
+                args=(process,),
+                daemon=True
+            )
+            self.full_preview_thread.start()
+            
+            print(f"[Preview] Full preview started, PID: {process.pid}")
+            return self.get_full_preview_url()
+            
+        except Exception as e:
+            print(f"[Preview] Failed to start tinymist: {e}")
+            self._broadcast_log("error", f"Failed to start tinymist: {e}")
+            return None
+    
+    def _read_full_preview_output(self, process):
+        """Read and broadcast tinymist output."""
+        try:
+            for line in iter(process.stdout.readline, ''):
+                if not self.full_preview_running:
+                    break
+                if line:
+                    line = line.rstrip()
+                    print(f"[Tinymist] {line}")
+                    # Broadcast errors and warnings
+                    if "error" in line.lower():
+                        self._broadcast_log("error", line)
+                    elif "warning" in line.lower():
+                        self._broadcast_log("warning", line)
+        except Exception as e:
+            print(f"[Preview] Error reading tinymist output: {e}")
+    
+    def stop_full_preview(self):
+        """Stop the full document preview."""
+        if not self.full_preview_running:
+            return
+        
+        print("[Preview] Stopping full preview")
+        self.full_preview_running = False
+        
+        if self.full_preview_process:
+            try:
+                self.full_preview_process.terminate()
+                self.full_preview_process.wait(timeout=3)
+            except:
+                try:
+                    self.full_preview_process.kill()
+                except:
+                    pass
+            self.full_preview_process = None
+    
+    def get_full_preview_url(self):
+        """Get the URL for the full preview using the dynamically assigned port."""
+        port = self.full_preview_port or 23625  # Fall back to default if not set
+        return f"http://127.0.0.1:{port}"
+

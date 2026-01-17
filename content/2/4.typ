@@ -86,41 +86,41 @@ $ d/(d x) (cot(x)) = -csc^2(x) $
   2. $ lim_(x -> 0) ((1 - cos(x))/x) = 0 $
   #proof("1")[
     We will utilize the Squeeze Theorem to prove this.
-    #let O = point(0, 0, label: "O")
-    #let A = point(5, 0)
-    #let C = point(5, 5 / calc.sqrt(3), label: "C")
+    #let O = shape.point(0, 0, label: "O")
+    #let A = shape.point(5, 0)
+    #let C = shape.point(5, 5 / calc.sqrt(3), label: "C")
 
-    #let B = point-at-angle(
+    #let B = shape.point-at-angle(
       O,
       30deg,
       5,
       from: A,
       label: "B",
     )
-    #let D = point(x(B), 0)
-    #blank-canvas(
+    #let D = shape.point(shape.x(B), 0)
+    #canvas.blank-canvas(
       O,
       A,
       B,
       C,
       D,
-      arc(O, A, B),
-      segment(O, A),
-      segment(O, C),
-      segment(O, B, label: "r"),
-      segment(B, C),
-      segment(A, C),
-      segment(B, D),
-      right-angle(B, D, O),
-      right-angle(C, A, O),
-      angle(A, O, B, label: $theta$),
+      shape.arc(O, A, B),
+      shape.segment(O, A),
+      shape.segment(O, C),
+      shape.segment(O, B, label: "r"),
+      shape.segment(B, C),
+      shape.segment(A, C),
+      shape.segment(B, D),
+      shape.right-angle(B, D, O),
+      shape.right-angle(C, A, O),
+      shape.angle(A, O, B, label: $theta$),
     )
     Here, we know that the inequality
     $ overline(B D) <= overparen(A B) <= overline(A C) $
     If we take the limit $theta -> 0$, we get
     $ lim_(theta -> 0) overline(B D) <= lim_(theta -> 0) overparen(A B) <= lim_(theta -> 0) overline(A C) $
     $
-      lim_(theta -> 0) overline(O B) sin(theta) <= lim_(theta -> 0) r theta <= lim_(theta->0) overline(O A) tan(theta)
+      lim_(theta -> 0) overline(O B) sin(theta) <= lim_(theta -> 0) r theta <= lim_(theta-> 0) overline(O A) tan(theta)
     $
     Divide both sides by $sin(theta)$.
     $

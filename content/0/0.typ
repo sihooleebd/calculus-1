@@ -7,17 +7,17 @@
   - #image("../images/Screenshot 2025-12-19 at 17.19.26.png")
   - Approximation of an area using rectangles.
 
-  #cartesian-canvas(
+  #canvas.cartesian-canvas(
     size: (8, 6),
     x-domain: (-0.5, 3),
     y-domain: (-0.5, 5),
     show-grid: true,
     // Plot f(x) = x²
-    graph(x => calc.pow(x, 2), domain: (0, 2.2)),
+    graph.graph(x => calc.pow(x, 2), domain: (0, 2.2)),
     // Tangent line at x=1: y = 2x - 1
-    func(x => 2 * x - 1, domain: (0, 2.5), style: (stroke: gray)),
+    graph.func(x => 2 * x - 1, domain: (0, 2.5), style: (stroke: gray)),
     // Point on curve at x=1
-    point(1, 1, label: $P$),
+    graph.point(1, 1, label: $P$),
   )
   #notation("The Area Problem")[
     We can define the area under the curve as

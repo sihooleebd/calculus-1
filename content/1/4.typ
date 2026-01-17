@@ -10,7 +10,7 @@
 #example("Tangency Basics")[
   Say we have the function $f(x) = x^2$. Let us deifne the base point of our tangent slope calculation as $x=1$. Here, our slope calculation equation would become :
   $ m_"pq" = (p_x^2 - q_x^2)/(p_x - q_x) $ where $q_x = 1$. If we plot in values from $p_x = 2$ to $p_x approx 1$, we get the following table:
-  #table-plot(
+  #data.table-plot(
     headers: ("p_x", "m_pq"),
     data: (
       (2, 3),
@@ -27,7 +27,7 @@
 #note("Approach from L/R")[
   Note from the example above that there are two directions a line can approach a curve: from the left side (as $p_x$ approaches $1$ from values less than $1$) and from the right side (as $p_x$ approaches $1$ from values greater than $1$).
   - Normally, this doesnt pose that much of a problem, but if the function is *severed* at a point, the left-hand limit and right-hand limit may not be equal, leading to different tangent slopes from each side.
-  
+
 ]
 
 = The Velocity Problem
@@ -38,7 +38,7 @@
 #definition("Average Velocity")[
   Average velocity over a time interval is defined as the total displacement divided by the total time taken. Mathematically, if a car moves from position $s(a)$ at time $a$ to position $s(b)$ at time $b$, the average velocity $v_"avg"$ over the interval $[a, b]$ is given by:
   $ v_"avg" = (s(b) - s(a)) / (b - a) $
-] 
+]
 
 #definition("Instantaneous Velocity")[
   A bit off course, but we can define instantaneous velocity using the later-defined idea of the limit.

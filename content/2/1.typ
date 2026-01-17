@@ -1,6 +1,6 @@
 #import "../../templates/templater.typ": *
 
-We now should discuss the elephant in the room, *derivatives*. 
+We now should discuss the elephant in the room, *derivatives*.
 = Introduction to Derivatives
 - So far, we have discussed limits and how they can be used to find the slope of tangents and instantaneous velocity. However, we have not yet formally defined derivatives.
 - Derivatives are a way to represent the rate of change of a function at a specific point. In simpler terms, it tells us how quickly the function's output is changing as we make small changes to its input.
@@ -8,25 +8,25 @@ We now should discuss the elephant in the room, *derivatives*.
 #definition("The Tangent Line")[
   The tangent line to the curve $y = f(x)$ at the point $P(a, f(a))$ is the line through $P$ with the slope $ m = lim_(x->a) (f(x) - f(a)) / (x - a) $.
   provided that this limit exists.
-  
+
   As we move the limit closer to $P$, the line more accurately represents the slope of the curve at that point.
-  #cartesian-canvas(
+  #canvas.cartesian-canvas(
     size: (8, 6),
     x-domain: (-2, 3),
     y-domain: (0, 6),
     show-grid: true,
     // Graph of f(x) = x^2
-    graph(x => x * x, domain: (-2, 4), label: $f(x) = x^2$),
+    graph.graph(x => x * x, domain: (-2, 4), label: $f(x) = x^2$),
     // Tangent line at point P(1, 1)
-    func(x => 2 * (x - 1) + 1, domain: (-2, 4), label: "", style: (stroke: red)),
+    graph.func(x => 2 * (x - 1) + 1, domain: (-2, 4), label: "", style: (stroke: red)),
     // Point P(1, 1)
-    func(x => 3 * (x - 1) + 1, domain: (-2, 4), label: "", style: (stroke: orange)),
-    func(x => 2.5 * (x - 1) + 1, domain: (-2, 4), label: "", style: (stroke: lime)),
-    
-    
-    point(1, 1, label: $P(1, 1)$),
-    point(1.5, 2.25, label: $Q(1.5, 2.25)$),
-    point(2, 4, label: $R(2, 4)$),
+    graph.func(x => 3 * (x - 1) + 1, domain: (-2, 4), label: "", style: (stroke: orange)),
+    graph.func(x => 2.5 * (x - 1) + 1, domain: (-2, 4), label: "", style: (stroke: lime)),
+
+
+    graph.point(1, 1, label: $P(1, 1)$),
+    graph.point(1.5, 2.25, label: $Q(1.5, 2.25)$),
+    graph.point(2, 4, label: $R(2, 4)$),
   )
 ]
 
@@ -58,34 +58,34 @@ We now should discuss the elephant in the room, *derivatives*.
 
     Therefore, the equation of the tangent line to the curve $y = x^2$ at point $P(2, 4)$ is:
     $ y = 4x - 4 $
-    #cartesian-canvas(
+    #canvas.cartesian-canvas(
       size: (8, 6),
       x-domain: (0, 4),
       y-domain: (0, 10),
       show-grid: true,
       // Graph of f(x) = x^2
-      graph(x => x * x, domain: (0, 4), label: $f(x) = x^2$),
+      graph.graph(x => x * x, domain: (0, 4), label: $f(x) = x^2$),
       // Tangent line at point P(2, 4)
-      graph(x => 4 * x - 4, domain: (0, 4), label: $y = 4x - 4$, style: (stroke: red)),
+      graph.graph(x => 4 * x - 4, domain: (0, 4), label: $y = 4x - 4$, style: (stroke: red)),
       // Point P(2, 4)
-      point(2, 4, label: $P(2, 4)$),
+      graph.point(2, 4, label: $P(2, 4)$),
     )
   ]
 ]
 
-However, we can have a alternate method for defining derivatives. Imageine we have a points $P$ and $Q$, seperated by a small distance $h$ on the curve of $f(x)$. 
-#cartesian-canvas(
+However, we can have a alternate method for defining derivatives. Imageine we have a points $P$ and $Q$, seperated by a small distance $h$ on the curve of $f(x)$.
+#canvas.cartesian-canvas(
   size: (8, 6),
   x-domain: (0, 4),
   y-domain: (0, 10),
   show-grid: true,
   // Graph of f(x) = x^2
-  graph(x => x * x, domain: (0, 4)),
+  graph.graph(x => x * x, domain: (0, 4)),
   // Secant line between points P and Q
-  graph(x => 2.5 * (x - 1) + 1, domain: (0, 4), label: "", style: (stroke: orange)),
+  graph.graph(x => 2.5 * (x - 1) + 1, domain: (0, 4), label: "", style: (stroke: orange)),
   // Points P and Q
-  point(1, 1, label: $P(1, 1)$),
-  point(1.5, 2.25, label: $Q(1 + h, f(1 + h))$),
+  graph.point(1, 1, label: $P(1, 1)$),
+  graph.point(1.5, 2.25, label: $Q(1 + h, f(1 + h))$),
 )
 
 #definition("Alternative Definition of the Derivative")[
@@ -105,13 +105,13 @@ Do you remember the velocity problem we discussed in chapter 0? We can use this 
     To write it out in the long method, we have :
     $ a(t) = lim_(h->0) (v(t + h) - v(t)) / h = lim_(h->0) ( (s(t + h) - s(t)) / h - v(t) ) / h $
   ]
-] 
+]
 
 = Rate of Change
 Derivatives can also be used to find the rate of change of one quantity with respect to another. For example, if we have a function that describes the relationship between distance and time, we can use derivatives to find the rate of change of distance with respect to time, which is velocity.
 #definition("Rate of Change")[
   The rate of change of a function $f(x)$ with respect to $x$ at a point $a$ is given by the derivative $f'(a)$.
-  We can represent it as : 
+  We can represent it as :
   $ "rate of change" = (Delta x)/(Delta y) = (f(x_2)-f(x_1))/(x_2-x_1) $
 ]
 

@@ -1,5 +1,7 @@
 """
-Noteworthy GUI Server - FastAPI backend
+Noteworthy GUI Solo Server - FastAPI backend (Single-user mode)
+No Yjs CRDT, no chat, no collaboration - direct file editing
+
 Works directly on project files via noteworthy.config paths
 """
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Body
@@ -20,74 +22,57 @@ from ..config import (
     PREFACE_FILE, SNIPPETS_FILE, SCHEMES_DIR,
     MODULES_CONFIG_FILE, INDEXIGNORE_FILE
 )
-from .preview import PreviewManager
+from ..gui.preview import PreviewManager
 
-app = FastAPI(title="Noteworthy GUI")
+app = FastAPI(title="Noteworthy Solo GUI")
 preview_manager = PreviewManager()
 
-# DocumentHub - Unified sync manager
-from .document_hub import document_hub
-from .crdt_manager import crdt_manager
-import uuid
+# Store for WebSocket connections (simple single-user presence)
+_active_websocket: WebSocket = None
+_current_watched_file: str = None  # Track current file for cleanup on switch
 
-# Connect preview manager to document hub
-document_hub.preview_manager = preview_manager
-
-# Mount Yjs WebSocket endpoint
-from .yjs_provider import get_yjs_asgi_app, yjs_provider
-app.mount("/yjs", get_yjs_asgi_app())
-
-# Track the WebSocket server background task
-_yjs_server_task: asyncio.Task = None
 
 @app.on_event("startup")
 async def startup_event():
-    """Register global preview callback on startup."""
-    global _yjs_server_task
-    
+    """Initialize on startup."""
     loop = asyncio.get_running_loop()
     
     def on_preview_bridge(updates, source_path):
         """Bridge thread callback to asyncio loop."""
         asyncio.run_coroutine_threadsafe(
-            document_hub.on_preview_update(updates, source_path),
+            broadcast_preview(updates, source_path),
             loop
         )
             
     preview_manager.add_callback(on_preview_bridge)
     
+    # Stop any stale tinymist preview from previous session
+    preview_manager.stop_full_preview()
+    
     # Sanity check modules.json
     validate_modules_json()
-    
-    # Start Yjs WebSocket Server as a background task
-    # In pycrdt-websocket 0.16+, the server must be explicitly started
-    # and we must wait for it to be ready before accepting connections
-    if yjs_provider.server:
-        print("[Server] Starting Yjs WebSocket Server...")
-        _yjs_server_task = asyncio.create_task(yjs_provider.server.start())
-        # Wait for the server to be fully started before accepting connections
-        await yjs_provider.server.started.wait()
-        print("[Server] Yjs WebSocket Server started and ready")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown."""
-    global _yjs_server_task
-    
-    # Stop Yjs WebSocket Server
-    if yjs_provider.server:
-        print("[Server] Stopping Yjs WebSocket Server...")
-        await yjs_provider.server.stop()
-        
-    # Cancel the background task if still running
-    if _yjs_server_task and not _yjs_server_task.done():
-        _yjs_server_task.cancel()
+    preview_manager.stop_full_preview()
+    print("[Solo Server] Shutdown complete.")
+
+
+async def broadcast_preview(updates: list, source_path: str):
+    """Send preview updates to the client."""
+    global _active_websocket
+    if _active_websocket:
         try:
-            await _yjs_server_task
-        except asyncio.CancelledError:
-            pass
-    
-    print("[Server] Shutdown complete.")
+            await _active_websocket.send_text(json.dumps({
+                "type": "preview",
+                "updates": updates,
+                "file": source_path
+            }))
+            print(f"[Debug] Sent preview update for {source_path} ({len(updates)} pages)")
+        except Exception as e:
+            print(f"[Debug] Broadcast error: {e}")
 
 
 def validate_modules_json():
@@ -137,12 +122,12 @@ def regenerate_modules_json():
                         if core_item.is_dir():
                             core_modules[core_item.name] = {
                                 "source": "core",
-                                "sha": None
+                                "sha": None  # Unknown sha for recovered modules
                             }
                 else:
                     modules[item.name] = {
                         "source": "local",
-                        "sha": None
+                        "sha": None  # Unknown sha for recovered modules
                     }
     
     new_data = {
@@ -163,28 +148,25 @@ def regenerate_modules_json():
 @app.websocket("/ws/doc")
 async def doc_endpoint(websocket: WebSocket):
     """
-    Unified document WebSocket.
+    Simplified document WebSocket for solo mode.
     
-    Handles:
-    - Document sync (content updates)
-    - Cursor sharing
+    Handles only:
     - Diagnostics updates
     - Preview updates
-    - Chat
-    """
-    user_name = websocket.query_params.get("name", "Anonymous")
-    user_id = websocket.query_params.get("id", None)
-    await websocket.accept()
     
-    user = await document_hub.connect(websocket, user_name, user_id)
+    No collaboration features (cursors, chat, user presence).
+    """
+    global _active_websocket
+    
+    await websocket.accept()
+    _active_websocket = websocket
     
     try:
-        # Send initial state
+        # Send welcome
         await websocket.send_text(json.dumps({
             "type": "welcome",
-            "userId": user.id,
-            "color": user.color,
-            "users": document_hub.get_users()
+            "userId": "solo",
+            "mode": "solo"
         }))
         
         while True:
@@ -192,67 +174,143 @@ async def doc_endpoint(websocket: WebSocket):
             msg = json.loads(data)
             
             if msg["type"] == "join":
-                # User joins a file (for presence tracking)
+                # User joins a file - start watching for preview
                 path = msg.get("path") or msg.get("file", "")
-                await document_hub.join_file(user.id, path)
-                
-                # Send other users' info (for Emacs cursor display)
-                other_cursors = document_hub.get_users_on_file(path, exclude_user_id=user.id)
-                await websocket.send_text(json.dumps({
-                    "type": "users",
-                    "file": path,
-                    "users": other_cursors
-                }))
-
-            
-
-            
-            elif msg["type"] == "cursor":
-                # Emacs sends "file", web might send "path"
-                # But document_hub.update_cursor doesn't take path, it uses user's active file?
-                # No, update_cursor takes many args but NOT path. 
-                # server.py line 172 call: update_cursor(user_id, line, col, ...)
-                # It relies on document_hub tracking what file the user is on.
-                
-                await document_hub.update_cursor(
-                    user.id,
-                    msg.get("line", 1),
-                    msg.get("column", 1) or msg.get("col", 1),
-                    msg.get("selectionStartLine") or msg.get("selStart", 0), # Emacs sends selStart (char pos) not line
-                    msg.get("selectionStartColumn") or 0, # Emacs doesn't send this
-                    msg.get("selectionEndLine") or msg.get("selEnd", 0), # Emacs sends selEnd (char pos)
-                    msg.get("selectionEndColumn") or 0
-                )
-                # Note: Emacs sends selStart/selEnd as character indices, not line/col.
-                # DocumentHub might expect line/col. Only Yjs Awareness handles char indices well.
-                # Use what we have for now.
-
-            elif msg["type"] == "delta":
-                # Handle Emacs edits (CRDT Delta)
-                path = msg.get("file") or msg.get("path", "")
-                ops = msg.get("ops", [])
-                
-                # Apply via CRDT manager (pushes to Yjs)
-                await crdt_manager.apply_delta(path, ops, source_user=user.id)
-            
-            elif msg["type"] == "identity":
-                await document_hub.update_identity(
-                    user.id, 
-                    msg.get("name", "Anonymous")
-                )
-            
-            elif msg["type"] == "chat":
-                await document_hub.send_chat(
-                    user.id,
-                    msg.get("text") or msg.get("message", ""),
-                    msg.get("timestamp", 0)
-                )
-                
+                if path:
+                    global _current_watched_file
+                    _current_watched_file = path
+                    
+                    # Start watching (will reuse existing watcher if already running)
+                    preview_manager.start_watch(path)
+                    
+                    # Cleanup old watchers but keep recent ones warm (LRU)
+                    preview_manager.cleanup_old_watchers(keep_paths=[path], max_watchers=3)
+                    
+                    # Run diagnostics in BACKGROUND - don't block preview!
+                    asyncio.create_task(send_diagnostics_async(websocket, path))
+                    
     except WebSocketDisconnect:
-        await document_hub.disconnect(user.id, websocket)
+        _active_websocket = None
     except Exception as e:
-        print(f"[Doc] Error: {e}")
-        await document_hub.disconnect(user.id, websocket)
+        print(f"[Solo Doc] Error: {e}")
+        _active_websocket = None
+
+
+async def send_diagnostics_async(websocket: WebSocket, path: str):
+    """Run diagnostics in background and send to client."""
+    try:
+        diags = await run_diagnostics_check(target_file=path)
+        await websocket.send_text(json.dumps({
+            "type": "diagnostics",
+            "diagnostics": diags,
+            "file": path
+        }))
+    except Exception as e:
+        print(f"[Diagnostics] Background check failed: {e}")
+
+
+async def run_diagnostics_check(target_file: str = None):
+    """Run typst compile to check for errors.
+    
+    Args:
+        target_file: Optional path to compile (relative to project root).
+                     If provided, compiles this file directly for accurate line numbers.
+    """
+    typst_bin = shutil.which("typst")
+    if not typst_bin:
+        for path in ["/opt/homebrew/bin/typst", "/usr/local/bin/typst", os.path.expanduser("~/.cargo/bin/typst")]:
+            if os.path.exists(path):
+                typst_bin = path
+                break
+    
+    if not typst_bin:
+        return []
+    
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+        tmp_path = tmp.name
+    
+    try:
+        # If target file is provided and exists, compile it directly for accurate diagnostics
+        if target_file and target_file.endswith('.typ'):
+            target_path = BASE_DIR / target_file
+            if target_path.exists():
+                # Compile the individual file directly
+                result = await asyncio.to_thread(
+                    subprocess.run,
+                    [
+                        typst_bin, "compile", str(target_path), tmp_path, 
+                        "--root", str(BASE_DIR)
+                    ],
+                    capture_output=True,
+                    text=True
+                )
+            else:
+                return []
+        else:
+            # Fall back to compiling the full parser
+            content_dir = BASE_DIR / "content"
+            chapter_folders = []
+            page_folders = {}
+            
+            if content_dir.exists():
+                ch_dirs = sorted(
+                    [d for d in content_dir.iterdir() if d.is_dir() and d.name.replace('.', '', 1).lstrip('-').isdigit()],
+                    key=lambda d: float(d.name) if d.name.replace('.', '', 1).lstrip('-').isdigit() else 999
+                )
+                for idx, ch_dir in enumerate(ch_dirs):
+                    chapter_folders.append(ch_dir.name)
+                    pg_files = sorted(
+                        [f.stem for f in ch_dir.glob("*.typ") if f.stem.replace('.', '', 1).lstrip('-').isdigit()],
+                        key=lambda s: float(s) if s.replace('.', '', 1).lstrip('-').isdigit() else 999
+                    )
+                    page_folders[str(idx)] = pg_files
+            
+            result = await asyncio.to_thread(
+                subprocess.run,
+                [
+                    typst_bin, "compile", str(RENDERER_FILE), tmp_path, 
+                    "--root", str(BASE_DIR),
+                    "--input", f"chapter-folders={json.dumps(chapter_folders)}",
+                    "--input", f"page-folders={json.dumps(page_folders)}"
+                ],
+                capture_output=True,
+                text=True
+            )
+        
+        diagnostics = []
+        lines = result.stderr.split('\n')
+        current_error = None
+        
+        for line in lines:
+            stripped = line.strip()
+            
+            if stripped.startswith("error:"):
+                msg = stripped[6:].strip()
+                current_error = {"message": msg, "severity": "error"}
+            
+            elif ("┌" in stripped or "├" in stripped) and current_error:
+                idx = stripped.find("─")
+                if idx != -1:
+                    location = stripped[idx+1:].strip()
+                    parts = location.split(':')
+                    if len(parts) >= 3:
+                        try:
+                            line_num = int(parts[-2])
+                            col_num = int(parts[-1])
+                            path_str = ":".join(parts[:-2]).strip()
+                            
+                            current_error["line"] = line_num
+                            current_error["col"] = col_num
+                            current_error["file"] = path_str
+                            diagnostics.append(current_error)
+                            current_error = None
+                        except ValueError:
+                            pass
+        
+        return diagnostics
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 # Static files
@@ -268,7 +326,6 @@ def get_file(path: str, raw: int = 0):
     target = BASE_DIR / path
     if target.exists() and target.is_file():
         if raw:
-            # Return file directly for binary content (PDF, images)
             import mimetypes
             mime_type, _ = mimetypes.guess_type(str(target))
             return FileResponse(target, media_type=mime_type or 'application/octet-stream')
@@ -286,6 +343,10 @@ def save_file(data: dict = Body(...)):
     target = BASE_DIR / path
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding='utf-8')
+    
+    # Preview update is handled by typst watch via file system events
+    # No need to manual trigger start_watch which restarts process if ref counting is off
+    
     return {"success": True}
 
 @app.post("/api/delete")
@@ -299,7 +360,6 @@ def delete_file(data: dict = Body(...)):
     if not target.exists():
         return {"success": False, "error": "File not found"}
     
-    # Security check - ensure path is within project
     try:
         target.resolve().relative_to(BASE_DIR.resolve())
     except ValueError:
@@ -352,7 +412,6 @@ def rename_file(data: dict = Body(...)):
     except ValueError:
         return {"success": False, "error": "Invalid destination path"}
     
-    # Check if destination already exists
     if dest.exists():
         return {"success": False, "error": "A file with that name already exists"}
     
@@ -506,7 +565,6 @@ def get_schemes():
     
     return {"themes": themes, "active": active}
 
-# IMPORTANT: This route must come BEFORE /api/schemes/{name} to avoid conflict
 @app.post("/api/schemes/active")
 def set_active_scheme(data: dict = Body(...)):
     """Set the active color scheme."""
@@ -581,7 +639,6 @@ def get_file_tree():
             for entry in sorted(path.iterdir(), key=lambda e: (not e.is_dir(), e.name)):
                 if entry.name.startswith('.') or entry.name in ['__pycache__', 'venv', 'build']:
                     continue
-                # Only show config, content, templates
                 if path == BASE_DIR and entry.name not in ['config', 'content', 'templates']:
                     continue
                 
@@ -604,7 +661,6 @@ def get_file_tree():
 def run_build(data: dict = Body(...)):
     """Execute build process."""
     try:
-        # Import core build components
         from ..core.build_manager import BuildManager
         from ..core.build import merge_pdfs, create_pdf_metadata, apply_pdf_metadata, get_pdf_page_count
         from ..utils import scan_content, load_config_safe
@@ -612,17 +668,13 @@ def run_build(data: dict = Body(...)):
         targets = data.get("targets", [])
         options = data.get("options", {})
         
-        # Load data
         hierarchy = json.loads(HIERARCHY_FILE.read_text())
         config = load_config_safe() or {}
         
-        # Prepare build directory
         if BUILD_DIR.exists():
             shutil.rmtree(BUILD_DIR)
         BUILD_DIR.mkdir()
         
-        # Group targets by chapter
-        # targets is list of {chapter: int, page: int} (indices)
         selected_pages = []
         target_chapters = set()
         for t in targets:
@@ -630,53 +682,30 @@ def run_build(data: dict = Body(...)):
             if c is not None and p is not None:
                 selected_pages.append((c, p))
                 target_chapters.add(c)
-                
-        # Prepare chapters list for BuildManager
-        # We filter the hierarchy to only include selected pages to avoid building everything
-        # However, BuildManager logic runs based on chapters list.
-        # We will reconstruct a temporary hierarchy-like list.
-        # Note: To preserve file naming consistency, we might want to respect original indices if BuildManager allows.
-        # BuildManager uses `enumerate(ch['pages'])` so indices are 0, 1, 2...
-        # If we change the list, indices change.
-        # For simplicity in this fix, we will build what is requested.
         
         filtered_chapters = []
         for ci, ch in enumerate(hierarchy):
             if ci in target_chapters:
-                # Get selected pages for this chapter
-                pages_indices = [p for c, p in selected_pages if c == ci]
-                # If we want to only build selected pages, we would filter here.
-                # But BuildManager logic is coupled with file naming.
-                # Use a simplified approach: pass the whole hierarchy subset for now
-                # allowing BuildManager to build full chapters if selected. 
-                # (Refining this to page-level is safer left for a deeper refactor if needed, 
-                # but let's try to just pass the relevant chapters).
                 filtered_chapters.append((ci, ch))
 
-        # Scan folders (needed for flags)
         ch_folders, pg_folders = scan_content()
         
-        # Build options
         opts = {
             'frontmatter': options.get("frontmatter", True),
             'typst_flags': [],
             'threads': max(1, (os.cpu_count() or 1) // 2),
-            'display-cover': options.get("covers", True),   # Map 'covers' to display-cover
+            'display-cover': options.get("covers", True),
             'display-chap-cover': options.get("covers", True)
         }
 
-        # Initialize BuildManager
         bm = BuildManager(BUILD_DIR)
         callbacks = {} 
         
-        # Run Build
         pdfs = bm.build_parallel(filtered_chapters, config, opts, callbacks)
         
-        # Merge
         current_page_count = sum([get_pdf_page_count(p) for p in pdfs]) + 1
         page_map = bm.page_map
         
-        # Outline
         if opts['frontmatter'] and config.get('display-outline', True):
             from ..core.build import compile_target
             out = BUILD_DIR / '02_outline.pdf'
@@ -691,11 +720,8 @@ def run_build(data: dict = Body(...)):
                 extra_flags=folder_flags
             )
             
-        # Final Merge
         if merge_pdfs(pdfs, OUTPUT_FILE):
-            # Metadata
             bm_file = BUILD_DIR / 'bookmarks.txt'
-            # We pass filtered_chapters here so bookmarks match what was built
             bookmarks_list = create_pdf_metadata(filtered_chapters, page_map, bm_file)
             apply_pdf_metadata(OUTPUT_FILE, bm_file, 
                              data.get('meta_title', 'Noteworthy'), 
@@ -723,19 +749,6 @@ def download_output():
         )
     return {"error": "No output file found"}
 
-# Legacy endpoints - prevent crash if old clients connect
-@app.websocket("/ws/collab")
-async def legacy_collab(websocket: WebSocket):
-    await websocket.close()
-
-@app.websocket("/ws/sync")
-async def legacy_sync(websocket: WebSocket):
-    await websocket.close()
-
-@app.websocket("/ws")
-async def legacy_ws(websocket: WebSocket):
-    await websocket.close()
-
 @app.post("/api/watch")
 def start_watch(data: dict = Body(...)):
     """Start watching a file for preview."""
@@ -744,49 +757,253 @@ def start_watch(data: dict = Body(...)):
     return {"success": True}
 
 # ============================================================
+# TINYMIST PREVIEW API (Synctex-like navigation)
+# ============================================================
+
+@app.post("/api/tinymist/start")
+def start_tinymist_preview(data: dict = Body(default={})):
+    """Start tinymist preview server for synctex-like navigation."""
+    file_path = data.get("path")
+    url = preview_manager.start_full_preview(file_path)
+    if url:
+        return {"success": True, "url": url}
+    return {"success": False, "error": "Failed to start tinymist preview"}
+
+@app.post("/api/tinymist/stop")
+def stop_tinymist_preview():
+    """Stop tinymist preview server."""
+    preview_manager.stop_full_preview()
+    return {"success": True}
+
+@app.get("/api/tinymist/status")
+def get_tinymist_status():
+    """Get tinymist preview status."""
+    return {
+        "running": preview_manager.full_preview_running,
+        "url": preview_manager.get_full_preview_url() if preview_manager.full_preview_running else None
+    }
+
+# ============================================================
 # MODULES API
 # ============================================================
 
 @app.get("/api/modules")
 def get_modules():
-    """Get installed modules."""
-    modules = {}
+    """
+    Get comprehensive module status including:
+    - Installed modules (local + core)
+    - Remote modules available for installation
+    - Config/folder conflicts
+    - Update availability
+    """
+    from ..core.pm import (
+        ensure_module_cache, discover_modules_from_cache, 
+        load_full_config, check_module_updates
+    )
+    
     modules_dir = BASE_DIR / "templates/module"
+    
+    # Result structure
+    result = {
+        "installed": {},      # Modules on disk
+        "remote": {},         # Available from remote, not installed
+        "conflicts": [],      # Config/folder mismatches
+        "updates_available": []  # Modules with updates
+    }
+    
+    # 1. Scan installed modules from disk
+    installed_on_disk = set()
     if modules_dir.exists():
         for item in modules_dir.iterdir():
-            if item.is_dir() and not item.name.startswith('.'):
+            if item.is_dir() and not item.name.startswith('.') and item.name != 'core':
+                installed_on_disk.add(item.name)
                 blueprint_path = item / "blueprint.json"
-                modules[item.name] = {
+                meta_path = item / "metadata.json"
+                description = ""
+                if meta_path.exists():
+                    try:
+                        description = json.loads(meta_path.read_text()).get("description", "")
+                    except:
+                        pass
+                result["installed"][item.name] = {
                     "source": "local", 
-                    "installed": True,
+                    "status": "installed",
+                    "description": description,
                     "has_config": blueprint_path.exists()
                 }
         
-        # Scan core modules
+        # Core modules
         core_dir = modules_dir / "core"
         if core_dir.exists():
             for item in core_dir.iterdir():
                 if item.is_dir():
                     name = f"core/{item.name}"
+                    installed_on_disk.add(name)
                     blueprint_path = item / "blueprint.json"
-                    modules[name] = {
+                    meta_path = item / "metadata.json"
+                    description = ""
+                    if meta_path.exists():
+                        try:
+                            description = json.loads(meta_path.read_text()).get("description", "")
+                        except:
+                            pass
+                    result["installed"][name] = {
                         "source": "core", 
-                        "installed": True,
+                        "status": "installed",
+                        "description": description,
                         "has_config": blueprint_path.exists()
                     }
     
-    return modules
+    # 2. Load modules.json config
+    config = load_full_config()
+    config_modules = set(config.get("modules", {}).keys())
+    config_core = set(f"core/{k}" for k in config.get("core_modules", {}).keys())
+    all_in_config = config_modules | config_core
+    
+    # 3. Check for conflicts
+    # In config but not on disk (missing files)
+    for name in config_modules:
+        if name not in installed_on_disk:
+            status = config.get("modules", {}).get(name, {}).get("status", "disabled")
+            if status != "disabled":
+                result["conflicts"].append({
+                    "type": "missing_folder",
+                    "module": name,
+                    "message": f"'{name}' is enabled in config but missing from disk"
+                })
+    
+    # On disk but not in config (orphaned modules)
+    for name in installed_on_disk:
+        if not name.startswith("core/") and name not in config_modules:
+            result["conflicts"].append({
+                "type": "missing_config",
+                "module": name,
+                "message": f"'{name}' exists on disk but not in modules.json"
+            })
+    
+    # 4. Fetch remote modules and find ones not installed
+    try:
+        ensure_module_cache()
+        core_remote, default_remote = discover_modules_from_cache()
+        
+        for name, meta in default_remote.items():
+            if name not in installed_on_disk:
+                result["remote"][name] = {
+                    "description": meta.get("description", ""),
+                    "dependencies": meta.get("dependencies", [])
+                }
+        
+        # 5. Check for updates
+        outdated = check_module_updates(config)
+        result["updates_available"] = list(outdated)
+        
+    except Exception as e:
+        # Offline or cache not available
+        pass
+    
+    return result
+
+
+@app.post("/api/modules/install")
+def install_module(data: dict = Body(...)):
+    """Install or update one or more modules from remote repository."""
+    from ..core.pm import (
+        ensure_module_cache, install_modules, install_core_modules_with_sha,
+        load_full_config, save_full_config, copy_module_from_cache,
+        get_module_sha_from_cache
+    )
+    from ..core.modules import generate_imports_file
+    
+    module_names = data.get("modules", [])
+    if not module_names:
+        return {"success": False, "error": "No modules specified"}
+    
+    try:
+        # Ensure cache is ready
+        if not ensure_module_cache():
+            return {"success": False, "error": "Could not access module repository"}
+        
+        # Load current config
+        config = load_full_config()
+        
+        # Separate core modules from regular modules
+        core_to_update = []
+        regular_to_install = []
+        
+        for name in module_names:
+            if name.startswith("core/"):
+                # Extract core module name (e.g., "core/block" -> "block")
+                core_to_update.append(name.replace("core/", ""))
+            else:
+                regular_to_install.append(name)
+        
+        installed = {}
+        
+        # Handle core modules
+        for core_name in core_to_update:
+            # Copy from cache with SHA tracking
+            copy_module_from_cache(core_name, is_core=True, 
+                                   current_local_sha=config.get("core_modules", {}).get(core_name, {}).get("sha"))
+            sha = get_module_sha_from_cache(core_name, is_core=True)
+            if sha:
+                if "core_modules" not in config:
+                    config["core_modules"] = {}
+                if core_name not in config["core_modules"]:
+                    config["core_modules"][core_name] = {}
+                config["core_modules"][core_name]["status"] = "global"
+                config["core_modules"][core_name]["source"] = "core"
+                config["core_modules"][core_name]["sha"] = sha
+                installed[f"core/{core_name}"] = sha
+        
+        # Handle regular modules
+        if regular_to_install:
+            regular_installed = install_modules(regular_to_install, current_config=config)
+            for name, sha in regular_installed.items():
+                if "modules" not in config:
+                    config["modules"] = {}
+                if name not in config["modules"]:
+                    config["modules"][name] = {}
+                config["modules"][name]["status"] = "qualified"
+                config["modules"][name]["source"] = "remote"
+                config["modules"][name]["sha"] = sha
+                installed[name] = sha
+        
+        save_full_config(config)
+        generate_imports_file()
+        
+        return {"success": True, "installed": list(installed.keys())}
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/modules/sync")
+def sync_modules():
+    """Re-sync with remote repository to discover new modules and updates."""
+    from ..core.pm import sync_modules_config, check_module_updates
+    
+    try:
+        config = sync_modules_config()
+        outdated = check_module_updates(config)
+        
+        return {
+            "success": True, 
+            "modules_count": len(config.get("modules", {})),
+            "updates_available": list(outdated)
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 @app.get("/api/modules/{name:path}/config")
 def get_module_config(name: str):
     """Get configuration schema and values for a module."""
-    # Locate blueprint
     blueprint_path = BASE_DIR / f"templates/module/{name}/blueprint.json"
     if not blueprint_path.exists():
         blueprint_path = BASE_DIR / f"templates/module/core/{name}/blueprint.json"
     
     if not blueprint_path.exists():
-        # Handle case where module exists but has no blueprint (not configurable)
         return {"settings": []}
 
     try:
@@ -794,7 +1011,6 @@ def get_module_config(name: str):
     except:
         return {"settings": []}
 
-    # Load existing config
     config_path = BASE_DIR / f"config/modules/{name}.json"
     user_config = {}
     if config_path.exists():
@@ -803,13 +1019,11 @@ def get_module_config(name: str):
         except:
             pass
 
-    # Merge values
     settings = []
     for item in blueprint.get("settings", []):
         key = item.get("key")
         if not key: continue
         
-        # Use user config value if present, else default
         item["value"] = user_config.get(key, item.get("default"))
         settings.append(item)
 
@@ -821,145 +1035,19 @@ def save_module_config(name: str, data: dict = Body(...)):
     config_path = BASE_DIR / f"config/modules/{name}.json"
     config_path.parent.mkdir(parents=True, exist_ok=True)
     
-    # We save the raw dictionary provided by the frontend
-    # logic should ensure we only save valid keys if strictness is required,
-    # but for now we trust the frontend to send the right structure (key: value)
-    
-    # However, the frontend might send the whole settings array back?
-    # Let's assume the frontend sends a dict of {key: value} pairs.
-    
     config_path.write_text(json.dumps(data, indent=4))
     return {"success": True}
 
 @app.post("/api/check")
 async def check_diagnostics(data: dict = Body(...)):
-    """Run typst compile to get diagnostics."""
-    import shutil
-    
-    # Find typst binary
-    typst_bin = shutil.which("typst")
-    if not typst_bin:
-        # Try common paths
-        for path in ["/opt/homebrew/bin/typst", "/usr/local/bin/typst", os.path.expanduser("~/.cargo/bin/typst")]:
-            if os.path.exists(path):
-                typst_bin = path
-                break
-    
-    if not typst_bin:
-        print("[LSP] typst binary not found!")
-        return {"diagnostics": [], "error": "typst not found"}
-    
-    # Create temp file for output
-    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-        tmp_path = tmp.name
-    
-    try:
-        # Scan content directory to get actual chapter/page structure
-        content_dir = BASE_DIR / "content"
-        chapter_folders = []
-        page_folders = {}
-        
-        if content_dir.exists():
-            # Get sorted chapter directories (numeric order)
-            ch_dirs = sorted(
-                [d for d in content_dir.iterdir() if d.is_dir() and d.name.replace('.', '', 1).lstrip('-').isdigit()],
-                key=lambda d: float(d.name) if d.name.replace('.', '', 1).lstrip('-').isdigit() else 999
-            )
-            for idx, ch_dir in enumerate(ch_dirs):
-                chapter_folders.append(ch_dir.name)
-                # Get sorted page files (numeric order, without .typ extension)
-                pg_files = sorted(
-                    [f.stem for f in ch_dir.glob("*.typ") if f.stem.replace('.', '', 1).lstrip('-').isdigit()],
-                    key=lambda s: float(s) if s.replace('.', '', 1).lstrip('-').isdigit() else 999
-                )
-                page_folders[str(idx)] = pg_files
-        
-        # Run typst compile with folder info
-        result = subprocess.run(
-            [
-                typst_bin, "compile", str(RENDERER_FILE), tmp_path, 
-                "--root", str(BASE_DIR),
-                "--input", f"chapter-folders={json.dumps(chapter_folders)}",
-                "--input", f"page-folders={json.dumps(page_folders)}"
-            ],
-            capture_output=True,
-            text=True
-        )
-        
-        print(f"[LSP] typst stderr: {result.stderr}")
-        print(f"[LSP] typst returncode: {result.returncode}")
-        
-        diagnostics = []
-        lines = result.stderr.split('\n')
-        current_error = None
-        
-        for line in lines:
-            stripped = line.strip()
-            
-            if stripped.startswith("error:"):
-                msg = stripped[6:].strip()
-                current_error = {"message": msg, "severity": "error"}
-            
-            # Typst uses Unicode box-drawing: ┌─ file:line:col
-            elif ("┌" in stripped or "├" in stripped) and current_error:
-                # Extract location after the box character
-                # Format: ┌─ file.typ:line:col or ├─ file.typ:line:col
-                idx = stripped.find("─")
-                if idx != -1:
-                    location = stripped[idx+1:].strip()
-                    parts = location.split(':')
-                    if len(parts) >= 3:
-                        try:
-                            line_num = int(parts[-2])
-                            col_num = int(parts[-1])
-                            path_str = ":".join(parts[:-2]).strip()
-                            
-                            current_error["line"] = line_num
-                            current_error["col"] = col_num
-                            current_error["file"] = path_str
-                            diagnostics.append(current_error)
-                            current_error = None
-                        except ValueError:
-                            pass
-        
-        print(f"[LSP] Parsed diagnostics: {diagnostics}")
-        return {"diagnostics": diagnostics}
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+    """Run typst compile to get diagnostics for a specific file."""
+    target_path = data.get("path")
+    diagnostics = await run_diagnostics_check(target_file=target_path)
+    return {"diagnostics": diagnostics}
 
 # ============================================================
 # STATUS API
 # ============================================================
-
-@app.get("/api/debug/yjs")
-async def debug_yjs_state():
-    """Debug endpoint to inspect Yjs rooms state."""
-    from .yjs_provider import yjs_provider
-    from pycrdt import Text
-    
-    status = {
-        "yjs_rooms": []
-    }
-    
-    for name, room in yjs_provider.rooms.items():
-        try:
-            text = room.ydoc.get("content", type=Text)
-            content_len = len(text)
-            content_preview = str(text)[:50] + "..." if content_len > 0 else ""
-            
-            room_info = {
-                "name": name,
-                "initialized": getattr(room, "_initialized", False),
-                "content_length": content_len,
-                "content_preview": content_preview,
-                "file_exists": room._file_path.exists() if hasattr(room, "_file_path") else "Unknown"
-            }
-            status["yjs_rooms"].append(room_info)
-        except Exception as e:
-            status["yjs_rooms"].append({"name": name, "error": str(e)})
-            
-    return status
 
 @app.get("/api/status")
 def get_status():
@@ -967,20 +1055,9 @@ def get_status():
     return {
         "project": BASE_DIR.name,
         "path": str(BASE_DIR),
-        "preview": preview_manager.get_status()
+        "preview": preview_manager.get_status(),
+        "mode": "solo"
     }
-
-# ============================================================
-# Mount Yjs CRDT WebSocket (for collaborative editing)
-# ============================================================
-
-try:
-    from .yjs_provider import get_yjs_asgi_app
-    app.mount("/yjs", get_yjs_asgi_app())
-    print("[Server] Yjs CRDT WebSocket mounted at /yjs")
-except ImportError as e:
-    print(f"[Server] Yjs CRDT not available (pycrdt-websocket not installed): {e}")
-    print("[Server] Collaborative editing will use fallback sync mechanism")
 
 # ============================================================
 # Mount Static Files (must be last!)
@@ -988,4 +1065,3 @@ except ImportError as e:
 
 if STATIC_DIR.exists():
     app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
-

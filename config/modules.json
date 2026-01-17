@@ -1,0 +1,56 @@
+{
+    "meta": {
+        "commit": "68783483ad642cc6a2bb0c0b403df348129aa2b5",
+        "last_sync": "2026-01-17T01:56:04.707906",
+        "repo_commit": "ddac077e8f47492c988fc606d9fa69d13c1f9022"
+    },
+    "modules": {
+        "layout": {
+            "source": "remote",
+            "sha": null
+        },
+        "shape": {
+            "source": "remote",
+            "sha": "fbc023a7786291298dd05c38d2725cf98b036e3c"
+        },
+        "data": {
+            "source": "remote",
+            "sha": "5ff5ef70d4a43e3ff380080f4f842b608d9fbc85"
+        },
+        "graph": {
+            "source": "remote",
+            "sha": "924aa80fa0b8cf14e2166854a7303f5df815a622"
+        },
+        "canvas": {
+            "source": "remote",
+            "sha": "46070a7edee64b9173326463bcb914a5526f46c2"
+        },
+        "dsa": {
+            "source": "remote",
+            "sha": "fe20a7207d6c3330bdf8e4808048777d0f421001"
+        },
+        "combi": {
+            "source": "remote",
+            "sha": "4e2743cf9e46c58933e537268c332ed3731765a8"
+        },
+        "timeline": {
+            "source": "remote",
+            "sha": null
+        },
+        "trees": {
+            "source": "remote",
+            "sha": "ca6aac7901923499bc28cdb8ffc1e6b7db902374"
+        }
+    },
+    "core_modules": {
+        "block": {
+            "source": "core",
+            "sha": "ecbac600e4b6c5a05eaa80805be1c4f051d1dd1d"
+        },
+        "cover": {
+            "source": "core",
+            "sha": "218ba5213ba890b89d802ddc2dcd4d0e2efa551a"
+        }
+    },
+    "local_modules": {}
+}

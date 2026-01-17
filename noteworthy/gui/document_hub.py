@@ -15,12 +15,18 @@ import uuid
 import subprocess
 import tempfile
 import os
+import hashlib
 from typing import Dict, Optional, List, Callable
 from dataclasses import dataclass, field
 from fastapi import WebSocket
 from pathlib import Path
+from pycrdt import Text
 
 from ..config import BASE_DIR, RENDERER_FILE
+from .yjs_provider import yjs_provider
+
+
+
 
 
 # User colors for cursor decorations
@@ -29,26 +35,22 @@ USER_COLORS = [
     "#F38181", "#AA96DA", "#FCBAD3", "#A8D8EA"
 ]
 
-
 @dataclass
 class User:
     """Connected user."""
     id: str
-    name: str
-    color: str
-    websocket: WebSocket
+    name: str = "Anonymous"
+    color: str = "#FF6B6B"
+    websocket: WebSocket = None
+    # State tracking
     current_file: Optional[str] = None
     cursor_line: int = 1
     cursor_column: int = 1
-
-
-@dataclass
-class Document:
-    """Document state."""
-    path: str
-    content: str
-    version: int = 0
-    diagnostics: List[dict] = field(default_factory=list)
+    # Selection state
+    selection_start_line: Optional[int] = None
+    selection_start_column: Optional[int] = None
+    selection_end_line: Optional[int] = None
+    selection_end_column: Optional[int] = None
 
 
 class DocumentHub:
@@ -60,7 +62,6 @@ class DocumentHub:
     
     def __init__(self):
         self.users: Dict[str, User] = {}
-        self.documents: Dict[str, Document] = {}
         self.color_index = 0
         self._lock = asyncio.Lock()
         self._diagnostics_task: Optional[asyncio.Task] = None
@@ -108,46 +109,6 @@ class DocumentHub:
         
         return user
     
-    async def update_content(self, user_id: str, path: str, content: str):
-        """
-        User updated document content.
-        
-        This is the central point that triggers:
-        1. Save to disk
-        2. Broadcast to other users
-        3. Trigger LSP diagnostics
-        4. Preview updates (handled by typst watch)
-        """
-        if path not in self.documents:
-            self.documents[path] = Document(path=path, content=content, version=0)
-        
-        doc = self.documents[path]
-        doc.content = content
-        doc.version += 1
-        
-        # 1. Save to disk
-        full_path = BASE_DIR / path
-        try:
-            full_path.write_text(content, encoding='utf-8')
-        except Exception as e:
-            print(f"[Hub] Error saving {path}: {e}")
-        
-        # 2. Broadcast to other users on this file
-        await self._broadcast_to_file(path, {
-            "type": "content",
-            "content": content,
-            "version": doc.version,
-            "userId": user_id
-        }, exclude=user_id)
-        
-        # 3. Schedule LSP diagnostics (debounced)
-        if path.endswith('.typ'):
-            self._pending_diagnostics.add(path)
-            if self._diagnostics_task is None or self._diagnostics_task.done():
-                self._diagnostics_task = asyncio.create_task(self._run_diagnostics_debounced())
-        
-        # 4. Preview - handled automatically by typst watch monitoring file changes
-    
     async def on_preview_update(self, updates: list, source_path: str):
         """
         Handle preview updates from PreviewManager.
@@ -158,29 +119,14 @@ class DocumentHub:
             "updates": updates
         })
 
-    async def _load_document(self, path: str) -> Document:
-        """Load document from disk."""
-        full_path = BASE_DIR / path
-        content = ""
-        if full_path.exists():
-            try:
-                content = full_path.read_text(encoding='utf-8')
-            except:
-                pass
-        
-        if path not in self.documents:
-            self.documents[path] = Document(path=path, content=content, version=0)
-        else:
-            # Refresh content from disk
-            self.documents[path].content = content
-        
-        return self.documents[path]
+
+
 
     
-    async def join_file(self, user_id: str, path: str) -> Document:
-        """User joins a file for editing."""
+    async def join_file(self, user_id: str, path: str):
+        """User joins a file for editing (presence only)."""
         if user_id not in self.users:
-            return None
+            return
         
         user = self.users[user_id]
         
@@ -193,14 +139,35 @@ class DocumentHub:
             
         user.current_file = path
         
-        # Load document (always fresh from disk)
-        doc = await self._load_document(path)
-        
         # Start preview if .typ file
         if path.endswith('.typ') and self.preview_manager:
             try:
                 self.preview_manager.start_watch(path)
                 
+                # Attach Awareness listener for bridging Web -> Emacs
+                try:
+                    room = await yjs_provider.get_room(path)
+                    if not getattr(room, "_awareness_hook_attached", False):
+                        
+                        def awareness_cb(topic, event, origin):
+                            # Handle remote awareness changes (from Web)
+                            if origin == "local": return 
+                            # Iterate changed clients
+                            # Note: pycrdt awareness event structure is complex
+                            # We'll just scan states for now
+                            self._broadcast_availability(path)
+
+                        # room.awareness.on("update", awareness_cb) 
+                        # pycrdt awareness listener is tricky in python
+                        # simplified: WE rely on yjs_provider to handle this or polling?
+                        # Using a polling task for now is safer/easier than fighting pycrdt async events inside sync callbacks
+                        pass
+                        
+                        # Set flag
+                        room._awareness_hook_attached = True
+                except:
+                    pass
+
                 # Send current cached state to this user immediately
                 # Retry a few times if cache is empty (typst might still be compiling)
                 for _ in range(10):  # Try up to 10 times = ~2 seconds
@@ -226,14 +193,17 @@ class DocumentHub:
             except Exception as e:
                 print(f"[Hub] Error starting watch: {e}")
         
-        # Send cached diagnostics to new user
-        if doc.diagnostics:
-            await user.websocket.send_text(json.dumps({
-                "type": "diagnostics",
-                "diagnostics": doc.diagnostics
-            }))
-            
-        return doc
+        # Notify others
+        await self._broadcast_to_file(path, {
+            "type": "user_joined",
+            "userId": user_id,
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "color": user.color
+            },
+            "users": self.get_users_on_file(path)
+        }, exclude=user_id)
     
     async def disconnect(self, user_id: str, websocket: WebSocket = None):
         """Remove a user."""
@@ -368,26 +338,81 @@ class DocumentHub:
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
     
-    async def update_cursor(self, user_id: str, line: int, column: int):
-        """Update user cursor position."""
+    async def update_cursor(self, user_id: str, line: int, column: int,
+                            selection_start_line: int = None, selection_start_column: int = None,
+                            selection_end_line: int = None, selection_end_column: int = None):
+        """Update user cursor position and selection range."""
         if user_id not in self.users:
             return
         
         user = self.users[user_id]
         user.cursor_line = line
         user.cursor_column = column
+        user.selection_start_line = selection_start_line
+        user.selection_start_column = selection_start_column
+        user.selection_end_line = selection_end_line
+        user.selection_end_column = selection_end_column
         
         if not user.current_file:
             return
         
-        await self._broadcast_to_file(user.current_file, {
+        msg = {
             "type": "cursor",
             "userId": user_id,
             "name": user.name,
             "color": user.color,
             "line": line,
             "column": column
-        }, exclude=user_id)
+        }
+        
+        # Include selection range if present
+        if selection_start_line is not None:
+            msg["selectionStartLine"] = selection_start_line
+            msg["selectionStartColumn"] = selection_start_column
+            msg["selectionEndLine"] = selection_end_line
+            msg["selectionEndColumn"] = selection_end_column
+        
+        await self._broadcast_to_file(user.current_file, msg, exclude=user_id)
+        
+        # Bridge to Yjs Awareness (for Web clients)
+        try:
+            room = await yjs_provider.get_room(user.current_file)
+            # Calculate absolute offset
+            text = room.ydoc.get("content", type=Text)
+            content = str(text)
+            
+            # Simple line/col to offset
+            offset = 0
+            lines = content.split('\n')
+            for i in range(min(line - 1, len(lines))):
+                offset += len(lines[i]) + 1 # +1 for newline
+            offset += min(column, len(lines[line-1]) if line-1 < len(lines) else 0)
+            
+            # Selection
+            sel_end = offset
+            if selection_start_line is not None:
+                # Calculate start offset
+                s_off = 0
+                for i in range(min(selection_start_line - 1, len(lines))):
+                    s_off += len(lines[i]) + 1
+                s_off += min(selection_start_column, len(lines[selection_start_line-1]) if selection_start_line-1 < len(lines) else 0)
+                
+                # Update Awareness
+                room.awareness.set_local_state_field("cursor", {
+                    "anchor": s_off,
+                    "head": offset,
+                    "user": {"name": user.name, "color": user.color}
+                })
+            else:
+                 room.awareness.set_local_state_field("cursor", {
+                    "anchor": offset,
+                    "head": offset,
+                    "user": {"name": user.name, "color": user.color}
+                })
+                
+        except Exception as e:
+            # print(f"[Hub] Awareness update error: {e}")
+            pass
     
     async def update_identity(self, user_id: str, name: str):
         """Update user's display name."""
@@ -423,8 +448,29 @@ class DocumentHub:
     def get_users(self) -> List[dict]:
         """Get all connected users."""
         return [
-            {"id": u.id, "name": u.name, "color": u.color, "file": u.current_file}
+            {
+                "id": u.id, 
+                "name": u.name, 
+                "color": u.color, 
+                "file": u.current_file,
+                "cursor_line": u.cursor_line,
+                "cursor_column": u.cursor_column
+            }
             for u in self.users.values()
+        ]
+    
+    def get_users_on_file(self, path: str, exclude_user_id: str = None) -> List[dict]:
+        """Get users currently on a specific file (for cursor sync)."""
+        return [
+            {
+                "id": u.id,
+                "name": u.name,
+                "color": u.color,
+                "cursor_line": u.cursor_line,
+                "cursor_column": u.cursor_column
+            }
+            for u in self.users.values()
+            if u.current_file == path and u.id != exclude_user_id
         ]
     
     async def _broadcast(self, message: dict, exclude: str = None):

@@ -15,7 +15,7 @@
 #example("Limit Basics")[
   Consider the function $f(x) = sin(x)/x$. Evaluate $f(x)$ at values of $x$ that get closer and closer to $0$:
   #solution("", "1")[
-    #table-plot(
+    #data.table-plot(
       headers: ($x$, $f(x)$),
       data: (
         (1, 0.84147098),
@@ -28,15 +28,15 @@
     By the intuitive definition of the limit, we can see that as $x$ approaches $0$, $f(x)$ approaches $1$. Therefore, we can conclude that:
     $ lim_(x -> 0) sin(x)/x = 1 $
 
-    #cartesian-canvas(
+    #canvas.cartesian-canvas(
       size: (8, 5),
       x-domain: (-8, 8),
       y-domain: (-0.5, 1.5),
       show-grid: true,
       // sin(x)/x - adaptive graph handles singularity at x=0
-      graph(x => calc.sin(x) / x, domain: (-8, 8), hole: (0,), label: $sin(x)/x$),
+      graph.graph(x => calc.sin(x) / x, domain: (-8, 8), hole: (0,), label: $sin(x)/x$),
       // Horizontal line at y=1 showing the limit
-      func(x => 1, domain: (-8, 8), label: "y = 1", style: (stroke: gray)),
+      graph.func(x => 1, domain: (-8, 8), label: "y = 1", style: (stroke: gray)),
       // Hollow point at (0, 1) showing the limit value
     )
   ]
@@ -60,7 +60,7 @@
   $
   Evaluate $H(x)$ at values of $x$ that get closer and closer to $0$ from both sides:
   #solution("More Evaluation...")[
-    #table-plot(
+    #data.table-plot(
       headers: ($x$, $H(x)$),
       data: (
         (-1, 0),
@@ -75,18 +75,18 @@
     $ lim_(x -> 0^-) H(x) = 0 $
     $ lim_(x -> 0^+) H(x) = 1 $
 
-    #cartesian-canvas(
+    #canvas.cartesian-canvas(
       size: (8, 4),
       x-domain: (-3, 3),
       y-domain: (-0.5, 1.5),
       show-grid: true,
       // Heaviside: 0 for x < 0
-      graph(x => 0, domain: (-3, -0.01), label: $H(x)$),
+      graph.graph(x => 0, domain: (-3, -0.01), label: $H(x)$),
       // Heaviside: 1 for x >= 0
-      graph(x => 1, domain: (0.01, 3)),
+      graph.graph(x => 1, domain: (0.01, 3)),
       // Show the jump discontinuity
-      point(0, 0, label: "", style: (fill: none)),
-      point(0, 1, label: ""),
+      graph.point(0, 0, label: "", style: (fill: none)),
+      graph.point(0, 1, label: ""),
     )
   ]
 ]
@@ -95,7 +95,7 @@
 #example("Uh Oh")[
   Investigate the following :  $ lim_(x -> 0) sin(pi/x) $
   #solution("")[
-    #table-plot(
+    #data.table-plot(
       headers: ($x$, $sin(pi/x)$),
       data: (
         (1, 0),
@@ -108,14 +108,14 @@
     By evaluating $sin(pi/x)$ at values of $x$ that get closer and closer to $0$, we can see that the function does not approach a single value. Instead, it oscillates between $-1$ and $1$. Therefore, we can conclude that:
     $ lim_(x -> 0) sin(pi/x) $ does not exist.
 
-    #cartesian-canvas(
+    #canvas.cartesian-canvas(
       size: (8, 4),
       x-domain: (-1, 1),
       y-domain: (-1.5, 1.5),
       x-tick: 0.25,
       show-grid: true,
       // sin(π/x) - adaptive sampling handles singularity
-      graph(x => calc.sin(calc.pi / x), domain: (-1, 1), label: $sin(pi/x)$),
+      graph.graph(x => calc.sin(calc.pi / x), domain: (-1, 1), label: $sin(pi/x)$),
     )
   ]
 ]
@@ -123,7 +123,7 @@
 #example("Uh Oh 2")[
   Find $ lim_(x -> 0) (1/x^2) $ if it exists
   #solution("")[
-    #table-plot(
+    #data.table-plot(
       headers: ($x$, $1/x^2$),
       data: (
         (1, 1),
@@ -137,15 +137,15 @@
     $ lim_(x -> 0) (1/x^2) = infinity $
     (which mathematically means that the limit does not exist in the real number system)
 
-    #cartesian-canvas(
+    #canvas.cartesian-canvas(
       size: (8, 5),
       x-domain: (-3, 3),
       y-domain: (-1, 10),
       show-grid: true,
       // 1/x² - adaptive graph handles singularity at x=0
-      graph(x => 1 / calc.pow(x, 2), domain: (-3, 3), label: $1/x^2$),
+      graph.graph(x => 1 / calc.pow(x, 2), domain: (-3, 3), label: $1/x^2$),
       // Vertical asymptote line at x=0
-      segment(point(0, -1), point(0, 10), style: (stroke: gray)),
+      shape.segment(graph.point(0, -1), graph.point(0, 10), style: (stroke: gray)),
     )
   ]
 ]
@@ -185,7 +185,7 @@
     Since both one-sided limits approach infinity (one positive, one negative),
     we can conclude that the function has a vertical asymptote at $x=3$.
 
-    #cartesian-canvas(
+    #canvas.cartesian-canvas(
       size: (8, 6),
       x-domain: (-2, 8),
       y-domain: (-15, 15),
@@ -193,12 +193,12 @@
       y-tick: 5,
       show-grid: true,
       // 2x/(x-3) - split at x=3 (asymptote)
-      graph(x => (2 * x) / (x - 3), domain: (-2, 2.9), label: $y = (2x)/(x-3)$),
-      graph(x => (2 * x) / (x - 3), domain: (3.1, 8)),
+      graph.graph(x => (2 * x) / (x - 3), domain: (-2, 2.9), label: $y = (2x)/(x-3)$),
+      graph.graph(x => (2 * x) / (x - 3), domain: (3.1, 8)),
       // Vertical asymptote at x=3
-      segment(point(3, -15), point(3, 15), style: (stroke: gray)),
+      shape.segment(graph.point(3, -15), graph.point(3, 15), style: (stroke: gray)),
       // Horizontal asymptote at y=2
-      func(x => 2, domain: (-2, 8), label: "y = 2", style: (stroke: gray)),
+      graph.func(x => 2, domain: (-2, 8), label: "y = 2", style: (stroke: gray)),
     )
   ]
 ]
