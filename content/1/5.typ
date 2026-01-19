@@ -2,6 +2,7 @@
 
 
 = The limit
+
 - In the previous section, whilst discussing tangents and velocity, we kept encountering a problem: how do we define the slope of a curve at a single point, or the velocity of a car at a precise moment in time?
 - Both of these problems can be solved using the concept of *limits*.
 #definition("Intuitive Definition of the Limit")[

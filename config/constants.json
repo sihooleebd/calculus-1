@@ -14,5 +14,6 @@
     "display-mode": "noteworthy-dark",
     "pad-chapter-id": true,
     "pad-page-id": true,
-    "heading-numbering": "1.1"
+    "heading-numbering": "1.1",
+    "block-design": "modern"
 }

@@ -15,4 +15,4 @@
 #let vmat(..cols) = $mat(..cols, delim: "|")$
 #let Vmat(..cols) = $mat(..cols, delim: "||")$
 #let evf = [Evaluate the following:]
-#let limx(k) = $limits(lim)_(x -> k)$
+#let limx(k) = $limits(lim)_(x -> #k)$
