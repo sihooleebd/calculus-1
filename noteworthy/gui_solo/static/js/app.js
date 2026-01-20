@@ -700,6 +700,33 @@ const app = {
 
             // Register Typst language for .typ files
             monaco.languages.register({ id: 'typst' });
+
+            // Language configuration for brackets and auto-closing
+            // Note: $ is handled by custom onDidType handler, not Monaco's autoClosingPairs
+            monaco.languages.setLanguageConfiguration('typst', {
+                brackets: [
+                    ['{', '}'],
+                    ['[', ']'],
+                    ['(', ')'],
+                    ['$', '$']
+                ],
+                autoClosingPairs: [
+                    { open: '{', close: '}' },
+                    { open: '[', close: ']' },
+                    { open: '(', close: ')' },
+                    { open: '"', close: '"', notIn: ['string'] }
+                    // $ handled by custom onDidType handler
+                    // ' disabled - conflicts with Typst apostrophes
+                ],
+                surroundingPairs: [
+                    { open: '{', close: '}' },
+                    { open: '[', close: ']' },
+                    { open: '(', close: ')' },
+                    { open: '"', close: '"' }
+                    // $ handled by custom onDidType handler
+                ]
+            });
+
             monaco.languages.setMonarchTokensProvider('typst', {
                 defaultToken: '',
                 tokenPostfix: '.typst',
@@ -804,7 +831,12 @@ const app = {
                 padding: { top: 16 },
                 lineNumbers: 'on',
                 roundedSelection: true,
-                scrollBeyondLastLine: false
+                scrollBeyondLastLine: false,
+                // Auto-closing for brackets and quotes
+                autoClosingBrackets: 'always',
+                autoClosingQuotes: 'always',
+                autoClosingOvertype: 'always',
+                autoSurround: 'languageDefined'
             });
 
             // Solo mode: no cursor awareness needed (single user)
@@ -880,6 +912,34 @@ const app = {
                     }
                 }
 
+                // ---- BACKSPACE: Delete entire $$ or $ $ when cursor is between ----
+                if (e.keyCode === monaco.KeyCode.Backspace && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+                    const col = position.column;
+                    // lineContent indices are 0-based, col is 1-based
+                    // lineContent[col - 2] is char before cursor, lineContent[col - 1] is char at/after cursor
+
+                    // Pattern 1: $|$ (cursor between two $)
+                    if (col >= 2 && lineContent[col - 2] === '$' && lineContent[col - 1] === '$') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Delete both $ chars
+                        const range = new monaco.Range(position.lineNumber, col - 1, position.lineNumber, col + 1);
+                        this.state.editor.executeEdits('', [{ range, text: '' }]);
+                        return;
+                    }
+
+                    // Pattern 2: $ |CURSOR| $ (cursor between two spaces, surrounded by $)
+                    if (col >= 3 && lineContent[col - 3] === '$' && lineContent[col - 2] === ' ' &&
+                        lineContent[col - 1] === ' ' && lineContent[col] === '$') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Delete the entire $ ... $ (5 chars: $ space space $)
+                        const range = new monaco.Range(position.lineNumber, col - 2, position.lineNumber, col + 2);
+                        this.state.editor.executeEdits('', [{ range, text: '' }]);
+                        return;
+                    }
+                }
+
                 // ---- TAB / SHIFT+TAB: List indentation ----
                 if (e.keyCode === monaco.KeyCode.Tab) {
                     const isBulletOrNumber = /^(\s*)([-*+]|\d+\.)\s/.test(lineContent);
@@ -917,15 +977,49 @@ const app = {
                 const position = this.state.editor.getPosition();
                 if (!model || !position) return;
 
-                // When user types $, insert $$ and position cursor between
+                // When user types $, handle auto-pairing and step-over
+                // Monaco doesn't handle same-character pairs like $$ well, so we do it manually
                 if (text === '$') {
                     const lineContent = model.getLineContent(position.lineNumber);
-                    const charBefore = position.column > 2 ? lineContent[position.column - 3] : '';
+                    // position.column is AFTER the $ we just typed
+                    const charAfter = lineContent[position.column - 1] || '';  // char at cursor (0-indexed)
+                    const charBefore = position.column > 2 ? lineContent[position.column - 3] : '';  // char before the typed $
 
-                    // Don't auto-complete if there's already a $ before (user is closing)
+                    // Step-over: if the char right after is already $, move past it
+                    // This happens when cursor is at: content$|$ and user types $
+                    if (charAfter === '$') {
+                        // Delete the $ we just typed and move cursor past the existing $
+                        this.state.editor.executeEdits('', [{
+                            range: new monaco.Range(position.lineNumber, position.column - 1, position.lineNumber, position.column),
+                            text: ''
+                        }]);
+                        this.state.editor.setPosition({
+                            lineNumber: position.lineNumber,
+                            column: position.column  // After deleting, this puts us past the $
+                        });
+                        return;
+                    }
+
+                    // Step-over with space: if char after is space and char after that is $
+                    // Pattern: content$| $ where | is cursor after typing $
+                    const charAfter2 = lineContent[position.column] || '';
+                    if (charAfter === ' ' && charAfter2 === '$') {
+                        // Delete the $ we just typed and move cursor past the space and $
+                        this.state.editor.executeEdits('', [{
+                            range: new monaco.Range(position.lineNumber, position.column - 1, position.lineNumber, position.column),
+                            text: ''
+                        }]);
+                        this.state.editor.setPosition({
+                            lineNumber: position.lineNumber,
+                            column: position.column + 1  // Past the space and $
+                        });
+                        return;
+                    }
+
+                    // Don't auto-pair if char before the typed $ is also $ (user typed $$)
                     if (charBefore === '$') return;
 
-                    // Insert another $ after cursor
+                    // Auto-pair: insert closing $ after cursor
                     this.state.editor.executeEdits('', [{
                         range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
                         text: '$'
@@ -1321,11 +1415,17 @@ const app = {
 
         const path = `${parentDir}/${filename}`;
 
+        // For .typ files, add templater import
+        let initialContent = '';
+        if (filename.endsWith('.typ')) {
+            initialContent = '#import "../../templates/templater.typ": *\n\n';
+        }
+
         try {
             const res = await fetch('/api/file', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ path, content: '' })
+                body: JSON.stringify({ path, content: initialContent })
             });
 
             if (res.ok) {
@@ -3115,8 +3215,8 @@ const app = {
                 break;
 
             case 'preview':
-                // Preview updates
-                this.updatePreview(msg.updates);
+                // SVG preview updates - DISABLED, using tinymist only
+                // this.updatePreview(msg.updates);
                 break;
 
             case 'diagnostics':
