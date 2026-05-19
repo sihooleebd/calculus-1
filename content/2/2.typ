@@ -1,98 +1,89 @@
 #import "../../templates/templater.typ": *
 
-= Derivatives
-As we did in the previous section, we can define derivatives using limits. 
-#definition("The Derivative at a Point")[
-  The derivative of the function $f(x)$ at the point $x = a$ is defined as:
-  $ f'(a) = lim_(h->0) (f(a + h) - f(a)) / h $
-  
-  This limit represents the slope of the tangent line to the curve at the point $(a, f(a))$.
-]
+#theorem("Rolle's Theorem")[
+  Let f be a function that satisfies the following three hypothesis:
+  + f is continuous on the closed interval $[a,b]$
+  + f is differentiable on the open interval $(a,b)$
+  + $ f(a) = f(b) $
 
-We can define a derivative on any point of a function as long as the limit exists.
-#cartesian-canvas(
-  size: (8, 6),
-  x-domain: (0, 4),
-  y-domain: (-2, 12),
-  show-grid: true,
-  // Graph of f(x) = x^2
-  graph(x => x * x, domain: (0, 4)),
-  // Tangent line at point P(1, 1)
-  graph(x => 2 * (x - 1) + 1, domain: (0, 2), style: (stroke: red)),
-  // Point P(1, 1)
-  point(1, 1, label: $(1, 1)$), 
-  //Tangent line at point P(2, 4)
-  graph(x => 4 * (x - 2) + 4, domain: (1, 3), style: (stroke: green)),
-  // Point P(2, 4)
-  point(2, 4, label: $(2, 4)$),
-  //Tangent line at point P(3, 9)
-  graph(x => 6 * (x - 3) + 9, domain: (2, 4), style: (stroke: blue)), 
-  // Point P(3, 9)
-  point(3, 9, label: $(3, 9)$),
-  
-)
+  Then there exists a number $c in (a,b)$ #st $f'(c) = 0$
+  #image("../images/MVT")
+  #proof[
+    + Case: $f(x) = k$, a constant function
+    + Case: $f(x) > f(a)$for some $x in (a,b)$
+    + Case: $f(x) < f(a)$for some $x in (a,b)$
 
-But, Are there functions that we can't define a derivative on? Yes! For example, consider the function $f(x) = |x|$ at the point $x = 0$.
-#cartesian-canvas(
-  size: (8, 6),
-  x-domain: (-2, 2),
-  y-domain: (-2, 2),
-  show-grid: true,
-  // Graph of f(x) = |x|
-  graph(x => calc.abs(x), domain: (-2, 2)),
-  // Point P(0, 0)
-  point(0, 0, label: $(0, 0)$),
-) 
-
-Since there is a sharp corner at $x=0$, we cannot define a unique tangent line, and thus the derivative does not exist at that point.
-
-#definition("Non-Differentiable Point")[
-  A point $x = a$ is called a non-differentiable point of the function $f(x)$ if the derivative $f'(a)$ does not exist. The opposite is called a differentiable point, where the derivative does exist.
-
-  We also call a function differentiable on an interval if it is differentiable at every point in an open interval.
-
-  Then, what makes a function non-differentiable at a point? There are three common reasons:
-  1. The function has a sharp corner or cusp at that point (like $f(x) = |x|$ at $x=0$).
-  2. The function has a vertical tangent line at that point (like $f(x) = x^(1/3)$ at $x=0$).
-  3. The function is not continuous at that point (like $f(x) = 1/x$ at $x=0$).
-  #cartesian-canvas(
-    size: (8, 6),
-    x-domain: (-2, 2),
-    y-domain: (-2, 2),
-    show-grid: true,
-    // Graph of f(x) = x^(1/3)
-    graph(x => calc.root(x, 3), domain: (-2, 2)),
-    // Point P(0, 0)
-    point(0, 0, label: $(0, 0)$),
-  )
-]
-
-
-= Other Notations
-There are several notations for derivatives. The most common ones are:
-- Lagrange's notation: $f'(x)$, $f''(x)$, $f'''(x)$ for the first, second, and third derivatives respectively.
-- Leibniz's notation: In Leibniz's notation, the derivative of $y$ with respect to $x$ is denoted as
-$ lr((d y)/(d x) |)_(x=a) "    or    " lr((d y)/(d x) ])_(x=a) $
-
-We have noted earlier that if $f$ is differentiable at $x = a$, a limit at that point must exist, and also the function value must be defined at that point. This shows resemblance to the definition of continuity.
-#theorem("Differentiability Implies Continuity")[
-  If a function $f$ is differentiable at a point $x = a$, then it is also continuous at that point.
-  #proof("")[
-    Since $f$ is differentiable at $x = a$, the limit
-    $ lim_(h->0) (f(a + h) - f(a)) / h $
-    exists.
-
-    This implies that
-    $ lim_(h->0) (f(a + h) - f(a)) = 0 $
-    because if the limit of the difference quotient exists, the numerator must approach zero as $h$ approaches zero.
-
-    Therefore,
-    $ lim_(h->0) f(a + h) = f(a) $
-    which is the definition of continuity at the point $x = a$.
-  ]
-  #note("Converse")[
-    The converse is not necessarily true; a function can be continuous at a point but not differentiable there. For example, the function $f(x) = |x|$ is continuous at $x = 0$ but not differentiable there.
   ]
 ]
-= Higher Derivatives. 
-Till now, we only dealt with the first derivative of a function. However, we can take derivatives of derivatives, leading to higher-order derivatives. The second derivative, denoted as $f''(x)$ or $(d^2 y)/(d x)^2$, represents the rate of change of the first derivative and provides information about the concavity
+
+#example()[
+  Prove that the equation $x cb + x - 1 = 0$ has exactly one real solution.
+  #cartesian-canvas(size: (4, 4), x-domain: (-2, 2), y-domain: (-3, 3), func(x => x*x*x + x - 1))
+  #solution()[
+    First we use IVT to show that a solution exists. Let $f(x) = x cb + x - 1$.
+    $ (f(0) < 0) and (f(1) > 0) ==> exists c in (0, 1) st  f(c) = 0 $
+
+    By Rolle's Theorem, we can show uniqueness. (TODO)
+  ]
+]
+
+#theorem()[
+  Let f be a function that satisfies the followings
+  + f is continuous on the closed interval $[a,b]$
+  + f is differentiable on the open interval $(a,b)$
+  Then there is a number $c in (a,b)$ #st
+  $ f'(c) = (f(b)-f(a))/(b-a) $
+  #image("../images/MVTMVT", width: 200pt)
+  #proof[
+    $ h(x) = f(x) = [(f(b)-f(a))/(b-a) (x-a) + f(a)] $
+    Then h is continuous and differentiable.
+    $ h(a) = f(a) - f(a) = 0 $
+    $ h(b) = f(b) - f(b) = 0 $
+    Using Rolle's Theorem, proven!
+  ]
+]
+
+#example()[
+  $ f(x) = x cb - x $
+  Find $c in (0,2)$ satisfying the MVT.
+  #let f = x => x*x*x - x
+  #cartesian-canvas(size: (4, 4), x-domain:(-0.5, 2.5), y-domain: (-1, 4), func(x => x*x*x - x), line-point-slope(point(calc.sqrt(4/3), f(calc.sqrt(4/3))), 3), point(calc.sqrt(4/3), f(calc.sqrt(4/3))))
+  #solution[
+    $ f'(c) = (f(2)-f(0))/(2-0) = 3 $
+    $ f'(x) = 3x sr - 1 $
+    $ c = sq(4/3) $
+  ]
+]
+
+#example()[
+  Suppose that $f(0) = -3$ and $f'(x) <= 5$ for all values of x. How large can $f(2)$ possible be?
+  #solution()[
+    By MVT
+    $ exists c in (0,2) wide f(2) -f(0)=f'(c)(2-0) $
+    $ f(2) - f(0) <= 10 $
+    $ f(2) <= 7 $
+    Sharpness: Let $f(x) = 5x - 3$. Then $f(2) = 7$
+  ]
+]
+
+#example()[
+  Show that
+  $ sin x < x "if" 0 < x < 2pi $
+]
+
+#theorem()[
+  If $f'(x) = 0$ for all x in an interval $(a,b)$, then f is constant of $(a,b)$
+  #proof[
+    Let $x_1, x_2 in (a,b)$ with $f(x_1) != f(x_2) and x_1 < x_2$. Since f is differentiable on $(a,b)$. By MVT
+    $ exists c in (x_1, x_2) wide f(x_2) - f(x_1) = (x_2-x_1) f'(c) $
+    Contradiction.
+  ]
+]
+
+#theorem()[
+  If $f'(x) = g'(x)$, there exists c #st $f(x) = g(x) + c$
+  #proof[
+    Let $F(x) = f(x) - g(x)$
+    $ F'(x) = f'(x) - g'(x) $
+  ]
+]

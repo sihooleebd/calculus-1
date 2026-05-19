@@ -1,14 +1,5 @@
 [
     {
-        "title": "Preview of Calculus",
-        "summary": "This section bridges the gap between static pre-calculus mathematics and the dynamic nature of calculus by addressing two fundamental problems: determining the slope of a tangent line to a curve and calculating the instantaneous velocity of a moving object. Both problems are solved using the same limiting process, where approximations\u2014such as the slopes of secant lines or average velocities over shrinking time intervals\u2014converge to a single, precise value. This concept of the \"limit\" serves as the foundation for the entire course, establishing the mathematical tools necessary to analyze instantaneous rates of change.",
-        "pages": [
-            {
-                "title": "Preview of Calculus"
-            }
-        ]
-    },
-    {
         "title": "Functions and Limits",
         "summary": "This chapter formalizes the concept of the limit, moving from intuitive approximations to rigorous mathematical definitions including the precise Epsilon-Delta definition. It provides the algebraic rules (Limit Laws) necessary to calculate limits without graphing, methods for handling indeterminate forms, and defines continuity to describe functions without breaks or holes. These concepts culminate in the Intermediate Value Theorem, a powerful tool used to prove the existence of roots and solutions within specific intervals, setting the stage for the definition of the derivative.",
         "pages": [
@@ -30,8 +21,8 @@
         ]
     },
     {
-        "title": "Derivatives",
-        "summary": "",
+        "title": "Deriveratives",
+        "summary": "This chapter formalizes the concept of the limit, moving from intuitive approximations to rigorous mathematical definitions including the precise Epsilon-Delta definition. It provides the algebraic rules (Limit Laws) necessary to calculate limits without graphing, methods for handling indeterminate forms, and defines continuity to describe functions without breaks or holes. These concepts culminate in the Intermediate Value Theorem, a powerful tool used to prove the existence of roots and solutions within specific intervals, setting the stage for the definition of the derivative.",
         "pages": [
             {
                 "title": "Derivatives and Rates of Change"
@@ -41,6 +32,129 @@
             },
             {
                 "title": "Differentiation Formulas"
+            },
+            {
+                "title": "Derivatives of Trigonometric Functions"
+            },
+            {
+                "title": "The Chain Rule"
+            },
+            {
+                "title": "Implicit Differentiation"
+            },
+            {
+                "title": "Rates of Change in the Natural and Social Sciences"
+            },
+            {
+                "title": "Relative Rates"
+            },
+            {
+                "title": "Linear Approximations and Differentials"
+            }
+        ]
+    },
+    {
+        "title": "Applications of Differtiation",
+        "summary": "This chapter formalizes the concept of the limit, moving from intuitive approximations to rigorous mathematical definitions including the precise Epsilon-Delta definition. It provides the algebraic rules (Limit Laws) necessary to calculate limits without graphing, methods for handling indeterminate forms, and defines continuity to describe functions without breaks or holes. These concepts culminate in the Intermediate Value Theorem, a powerful tool used to prove the existence of roots and solutions within specific intervals, setting the stage for the definition of the derivative.",
+        "pages": [
+            {
+                "title": "Maximum and Minimum Values"
+            },
+            {
+                "title": "The Mean Value Theorem"
+            },
+            {
+                "title": "What Derivatives Tell Us about the Shape of a Graph"
+            },
+            {
+                "title": "Limits at infinity; Horizontal Asymptotes"
+            },
+            {
+                "title": "Summary of Curve Sketching"
+            },
+            {
+                "title": "Graphing with Calculus and Technology"
+            },
+            {
+                "title": "Optimization Problem"
+            },
+            {
+                "title": "Optimization Problem"
+            },
+            {
+                "title": "Antiderivatives"
+            }
+        ]
+    },
+    {
+        "title": "Integrals",
+        "summary" : "IN CHAPTER 2 WE USED the tangent and velocity problems to introduce the derivative. In this chapter we use the area and distance problems to introduce the other central idea in calculus—the integral. The all-important relationship between the derivative and the integral is expressed in the Fundamental Theorem of Calculus, which says that differentiation and integration are in a sense inverse processes. We learn in this chapter, and in Chapters 5 and 8, how integration can be used to solve problems involving volumes, length of curves, population predictions, cardiac output, forces on a dam, work, consumer surplus, and baseball, among many others.",
+        "pages": [
+            {
+                "title": "The Area and Distance Problems"
+            },
+            {
+                "title": "The Definite Integral"
+            },
+            {
+                "title": "The Fundamental Theorem of Calculus"
+            },
+            {
+                "title": "Indefinite Integrals and the Net Change Theorem"
+            },
+            {
+                "title": "The Substitution Rule"
+            }
+        ]
+    },
+    {
+        "title": "Applications of Integrals",
+        "summary" : "IN CHAPTER 2 WE USED the tangent and velocity problems to introduce the derivative. In this chapter we use the area and distance problems to introduce the other central idea in calculus—the integral. The all-important relationship between the derivative and the integral is expressed in the Fundamental Theorem of Calculus, which says that differentiation and integration are in a sense inverse processes. We learn in this chapter, and in Chapters 5 and 8, how integration can be used to solve problems involving volumes, length of curves, population predictions, cardiac output, forces on a dam, work, consumer surplus, and baseball, among many others.",
+        "pages": [
+            {
+                "title": "Areas Between Curves"
+            },
+            {
+                "title": "Volumes"
+            },
+            {
+                "title": "Volumes by Cylindrical Shells"
+            },
+            {
+                "title": "Work"
+            },
+            {
+                "title": "Average Value of a Funcitons"
+            }
+        ]
+    },
+    {
+      "title": "Inverse Functions: Exponential, Logarithmic, and Inverse Trigonometric Functions",
+        "summary" : "IN CHAPTER 2 WE USED the tangent and velocity problems to introduce the derivative. In this chapter we use the area and distance problems to introduce the other central idea in calculus—the integral. The all-important relationship between the derivative and the integral is expressed in the Fundamental Theorem of Calculus, which says that differentiation and integration are in a sense inverse processes. We learn in this chapter, and in Chapters 5 and 8, how integration can be used to solve problems involving volumes, length of curves, population predictions, cardiac output, forces on a dam, work, consumer surplus, and baseball, among many others.",
+        "pages": [
+            {
+                "title": "Areas Between Curves"
+            },
+            {
+                "title": "The Natural Logarithmic Function"
+            },
+            {
+                "title": "The Natural Exponential Function"
+            },
+            {
+                "title": "General Logarithmic and Exponential Functions"
+            },
+            {
+                "title": "Exponential Growth and Decay"
+            },
+            {
+                "title": "Inverse Trigonometric Functions"
+            },
+            {
+                "title": "Hyperbolic Functions"
+            },
+            {
+                "title": "Indeterminate Forms and L'Hospital's Rule"
             }
         ]
     }

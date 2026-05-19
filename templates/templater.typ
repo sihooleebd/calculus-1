@@ -11,6 +11,6 @@
 // MODULE IMPORTS (Managed by Module Config)
 // =====================================================
 // Modules (Managed by Module Config)
-// Modules (Managed by Module Config)
+
 #import "core/imports.typ": *
 

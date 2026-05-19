@@ -16,3 +16,10 @@
 #let Vmat(..cols) = $mat(..cols, delim: "||")$
 #let evf = [Evaluate the following:]
 #let limx(k) = $limits(lim)_(x -> #k)$
+#let df = $dif f$
+#let dx = $dif x$
+#let dt = $dif t$
+#let dy = $dif y$
+#let du = $dif u$
+
+#let int = $integral$
