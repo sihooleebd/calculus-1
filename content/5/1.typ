@@ -130,3 +130,7 @@ $ (f invs) ' (a) = (Delta y)/(Delta x) = 1/(Delta x \/ Delta y) = 1/(f'(b)) $
   If $f$ is an one-to-one twice differentiable function with inverse funtion $g$, show that
   $ g''(x) = -(f''(g(x)))/([f'(g(x))]cb) $
 ]
+
+#note[
+  You shall show the existence of the inverse function before using Derivative of Inverse Function Theorem.
+]

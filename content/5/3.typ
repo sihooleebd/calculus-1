@@ -14,8 +14,10 @@ $ exp(r) = e^r $
 #definition()[
   This motivates the definition
   $ e^x := exp(x) $
-  *for all* real numbers.
+  This definition gives value *for all* real numbers. Equivalently,
+  $ e^x = y <==> ln y = x $
 ]
+
 #note[
   This way, we can completely avoid using limits while defining exponential function.
 ]
@@ -29,17 +31,41 @@ $ exp(r) = e^r $
 
 #theorem("The Laws of Exponents")[
   #set enum(numbering: "(a)")
-  + $$
-  #proof[
+  + $e^(x+y) = e^x e^y$
+  + $display(e^(x-y) = e^x/e^y)$
+  + $display((e^x)^r = e^(x r))$
+  #proof("(a)")[
 
   ]
 ]
 
 = Differentiation and Integration
 
+Let's use the differentiation of inverse funciton.
+
 Let $y = e^x$. Then $ln y = x$. Using Leibniz notation,
 $ dy/dx = 1/(dx\/dy) = 1/(d(ln y)\/dy) = 1/(1\/y) = y = e^x $
-Therefore,
-$ d/dx e^x = e^x $
-Also,
-$ int e^x dx = e^x + C $
+#theorem("Differentiation and Integration of Exponential Function")[
+  Therefore,
+  $ d/dx e^x = e^x $
+  Also,
+  $ int e^x dx = e^x + C $
+]
+
+#example()[
+
+]
+
+= Graphing
+
+The graph of $y=e^x$ is obtained by reflecting the graph of $y=ln x$ with respect to $y=x$, since it is an inverse funciton of $ln x.$
+
+The exponnetial funciton $f(x) = e^x$ is an increasing continuous function with domain $RR$ and has a horizontal asymptote of $y=0$.
+$ limx(oo) e^x = oo wide limx(-oo) e^x = 0 $
+#cartesian-canvas(
+  graph(x=>calc.exp(x))
+)
+
+#example()[
+
+]

@@ -181,6 +181,9 @@ on an interval #st $g(x) != 0$
   + Take natural logarithms of both sides of an equation $y=f(x)$ and use the laws of logarithms to expand the expression.
   + Differentiate implicitly with respect to $x$.
   + Solve the resulting equation for $y'$ and replace $y$ by $f(x)$.
+  #note[
+    If $x$ may be negative, take $ln abs(x)$. Also, you should use the definition of the differentiation to show when $f(x) = 0$
+  ]
 ]
 
 #example("Practicality of Logarithmic Differentiation")[
@@ -197,6 +200,9 @@ on an interval #st $g(x) != 0$
 #example("x over x")[
   Differentiate $y=x^x$, where $x>0$
   #solution()[
+    #note[
+      We haven't yet defined the exponential function for real values as a power. However, we assume it follows _typical_ exponential/logarhithmic theorems.
+    ]
     Logarithms of both sides gives
     $ ln y = ln(x^x) = x ln x $
     Differentiating implicitly with respect to $x$, we get
