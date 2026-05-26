@@ -43,3 +43,4 @@ templates/systemconfig/
 
 # Exports
 exports/
+.graphite.json
