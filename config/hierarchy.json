@@ -157,5 +157,35 @@
                 "title": "Indeterminate Forms and L'Hospital's Rule"
             }
         ]
+    },
+    {
+      "title": "Techniques of Integration",
+        "summary" : "IN CHAPTER 2 WE USED the tangent and velocity problems to introduce the derivative. In this chapter we use the area and distance problems to introduce the other central idea in calculus—the integral. The all-important relationship between the derivative and the integral is expressed in the Fundamental Theorem of Calculus, which says that differentiation and integration are in a sense inverse processes. We learn in this chapter, and in Chapters 5 and 8, how integration can be used to solve problems involving volumes, length of curves, population predictions, cardiac output, forces on a dam, work, consumer surplus, and baseball, among many others.",
+        "pages": [
+            {
+                "title": "Integration by Parts"
+            },
+            {
+                "title": "Trigonometric Integrals"
+            },
+            {
+                "title": "Trigonometric Substitution"
+            },
+            {
+                "title": "Integration of Rational Functions by Partial Fractions"
+            },
+            {
+                "title": "Strategy for Integration"
+            },
+            {
+                "title": "Integration Using Tables and Technology"
+            },
+            {
+                "title": "Approximate Integration"
+            },
+            {
+                "title": "Improper Integrals"
+            }
+        ]
     }
 ]

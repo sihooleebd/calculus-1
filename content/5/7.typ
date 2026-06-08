@@ -11,7 +11,9 @@
 Not periodic.
 
 #theorem("Identities")[
+  $
 
+  $
 ]
 
 #example()[

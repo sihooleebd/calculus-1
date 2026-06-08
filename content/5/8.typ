@@ -35,6 +35,9 @@ $ limx(oo) (x sr - 1)/(2 x sr + 1) = limx(oo) (1-1/(x sr))/(2+1/(x sr)) = 1/2 $.
   L'Hospital's Rule is also valid for one-sided limits and for limits at infinity.
 
   In the special case where $f(a) = g(a) = 9$, $f'$ and $g'$ are continuous, and $g'(a) != 0$, L'Hospital's Rule is easy to justify.
+  $
+    limx(a) (f(x))/(g(x)) =
+  $
 ]
 
 #example()[
@@ -100,6 +103,19 @@ where $f(x)>0$
 
 These cases can be handled by taking logarithms. Let $y = [f(x)]^(g(x))$, Then $ln y = g(x) ln (abs(f(x)))$.
 
+More precisely, there are three types: $0^0, oo^0, 1^oo$
+
 #example()[
+
+]
+
+= Proof of L'Hospital's Rule
+
+#theorem("Cauchy's Mean Value Theorem")[
+  Suppose that the functions $f$ and $g$ are continuous on $[a,b]$ and differentiable on $(a,b)$, and $g'(x)!=0$ for all $x$ in $(a,b)$. Then there is a number $c$ in $(a,b)$ #st
+  $ (f'(c))/(g'(c)) = (f(b)-f(a))/(g(b)-g(a)) $
+]
+
+#proof[
 
 ]
