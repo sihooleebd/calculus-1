@@ -1,6 +1,9 @@
 # Build artifacts
 templates/build/
 content/**/*.pdf
+Calculus.pdf
+mid.pdf
+fin.pdf
 
 
 *.zip

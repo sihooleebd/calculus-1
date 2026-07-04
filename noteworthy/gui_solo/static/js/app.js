@@ -3903,7 +3903,7 @@ const app = {
                 <h1 style="font-family: var(--font-display); font-size: 28px; font-weight: 700; margin-bottom: 4px;">Noteworthy</h1>
                 <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 14px;">A modular Typst template system</p>
                 
-                <span style="background: var(--bg-secondary); border-radius: 6px; padding: 6px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px;">v0.2.0</span>
+                <span style="background: var(--bg-secondary); border-radius: 6px; padding: 6px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px;">v0.3.0</span>
             </div>
             
             <div class="config-section" style="display: flex; justify-content: center; gap: 24px; padding: 16px 24px; flex-wrap: wrap;">
@@ -4206,47 +4206,10 @@ const app = {
     scrollChatToBottom: function () {
         const container = document.getElementById('chat-messages');
         container.scrollTop = container.scrollHeight;
-    },
-
-    // ============================================================
-    // LOG PANEL
-    // ============================================================
-
-    toggleLogPanel: function () {
-        const panel = document.getElementById('log-panel');
-        if (panel) {
-            panel.classList.toggle('hidden');
-        }
-    },
-
-    clearLogs: function () {
-        const container = document.getElementById('log-messages');
-        if (container) {
-            container.innerHTML = '';
-        }
-    },
-
-    // ============================================================
-    // PREVIEW SYNC (placeholder - tinymist handles this internally)
-    // ============================================================
-
-    syncPreviewScroll: function () {
-        // Tinymist preview handles its own scroll sync via WebSocket
-        // This is a placeholder for the button click
-        console.log('[Preview] Sync scroll requested (handled by tinymist)');
-
-        // Try to send a sync message to the tinymist iframe if available
-        const iframe = document.getElementById('tinymist-iframe');
-        if (iframe && iframe.contentWindow) {
-            // Tinymist doesn't expose a public API for this,
-            // but the cursor position is automatically synced
-            this.showSaveStatus('Sync requested');
-        }
     }
 };
 
 // Initialize on load
 window.onload = () => app.init();
 window.app = app;
-
 

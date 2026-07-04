@@ -91,5 +91,107 @@
         "title": "Antiderivatives"
       }
     ]
+  },
+  {
+    "title": "Integrals",
+    "summary": "",
+    "pages": [
+      {
+        "title": "The Area and Distance Problems"
+      },
+      {
+        "title": "The Definite Integral"
+      },
+      {
+        "title": "The Fundamental Theorem of Calculus"
+      },
+      {
+        "title": "Indefinite Integrals and the Net Change Theorem"
+      },
+      {
+        "title": "The Substitution Rule"
+      }
+    ]
+  },
+  {
+    "title": "Applications of Integration",
+    "summary": "",
+    "pages": [
+      {
+        "title": "Areas Between Curves"
+      },
+      {
+        "title": "Volumes"
+      },
+      {
+        "title": "Volumes by Cylindrical Shells"
+      },
+      {
+        "title": "Work"
+      },
+      {
+        "title": "Average Value of a Function"
+      }
+    ]
+  },
+  {
+    "title": "Inverse Functions",
+    "summary": "",
+    "pages": [
+      {
+        "title": "Inverse Functions and Their Derivatives"
+      },
+      {
+        "title": "The Natural Logarithmic Function"
+      },
+      {
+        "title": "The Natural Exponential Function"
+      },
+      {
+        "title": "General Logarithmic and Exponential Functions"
+      },
+      {
+        "title": "Exponential Growth and Decay"
+      },
+      {
+        "title": "Inverse Trigonometric Functions"
+      },
+      {
+        "title": "Hyperbolic Functions"
+      },
+      {
+        "title": "Indeterminate Forms and l'Hospital's Rule"
+      }
+    ]
+  },
+  {
+    "title": "Techniques of Integration",
+    "summary": "",
+    "pages": [
+      {
+        "title": "Integration by Parts"
+      },
+      {
+        "title": "Trigonometric Integrals"
+      },
+      {
+        "title": "Trigonometric Substitution"
+      },
+      {
+        "title": "Integration of Rational Functions by Partial Fractions"
+      },
+      {
+        "title": "Strategy for Integration"
+      },
+      {
+        "title": "Integration Using Tables and Technology"
+      },
+      {
+        "title": "Approximate Integration"
+      },
+      {
+        "title": "Improper Integrals"
+      }
+    ]
   }
 ]
