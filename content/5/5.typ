@@ -8,6 +8,18 @@ The average value of a function is the height of a single horizontal line that w
   $ f_"avg" = 1/(b-a) integral_a^b f(x) d x $
 ]
 
+#note("The water-leveling picture")[
+  Pour the region under the graph into a rectangular aquarium of the same width $b - a$ and let the water settle flat. The final water level is exactly $f_"avg"$.
+]
+
+#example("A Quick Average")[
+  Find the average value of $sin(x)$ on $[0, pi]$.
+  #solution("")[
+    $ f_"avg" = 1/pi integral_0^pi sin(x) d x = 1/pi [ -cos(x) ]_0^pi = 2/pi $
+    So the famous sine arch, flattened out, is only about $0.64$ tall.
+  ]
+]
+
 #theorem("Mean Value Theorem for Integrals")[
   If $f$ is continuous on $[a,b]$, then there exists some number $c$ in $[a,b]$ such that
   $ f(c) = 1/(b-a) integral_a^b f(x) d x $
@@ -26,6 +38,15 @@ The average value of a function is the height of a single horizontal line that w
     $ f(c) = 1/(b-a) integral_a^b f(x) d x $
   ]
 ]
+
+#canvas.cartesian-canvas(
+  size: (8, 4.5),
+  x-domain: (-0.3, 3.4),
+  y-domain: (0, 7),
+  graph.riemann-sum(x => x * calc.sqrt(x + 1), (0, 3), 60, method: "midpoint", smooth: true, style: (fill: rgb("#c6d8f5"), stroke: none)),
+  graph.graph(x => x * calc.sqrt(x + 1), domain: (0, 3.2), label: $f(x) = x sqrt(x+1)$),
+  graph.func(x => 116.0 / 45.0, domain: (0, 3), label: $f_"avg"$, style: (stroke: gray)),
+)
 
 #example("Average Value with a Substitution-Friendly Function")[
   Find the average value of
@@ -54,5 +75,7 @@ The average value of a function is the height of a single horizontal line that w
 
     Hence
     $ f_"avg" = 1/3 dot 116/15 = 116/45 $
+
+    In the picture, the shaded area under the curve equals the area of the rectangle capped by the gray line $y = 116/45$. The curve crosses that line at the point $c$ promised by the Mean Value Theorem for Integrals.
   ]
 ]

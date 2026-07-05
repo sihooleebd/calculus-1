@@ -12,19 +12,19 @@ This textbook has been carefully structured to guide you through the essential p
 
 #v(0.5em)
 
-*Limits and Continuity* — Establishing the precise mathematical foundation required to analyze functions at their boundaries, defining the critical concepts of instantaneous velocity and continuous motion.
+*Limits and Continuity* : Establishing the precise mathematical foundation required to analyze functions at their boundaries, defining the critical concepts of instantaneous velocity and continuous motion.
 
 #v(0.3em)
 
-*The Derivative and Its Applications* — Mastering the tools to measure instantaneous rates of change, using differentiation to solve complex optimization problems, approximate linear behaviors, and sketch the precise shapes of curves.
+*The Derivative and Its Applications* : Mastering the tools to measure instantaneous rates of change, using differentiation to solve complex optimization problems, approximate linear behaviors, and sketch the precise shapes of curves.
 
 #v(0.3em)
 
-*Integration* — Exploring the accumulation of quantities to determine net change, calculating complex areas and volumes, and bridging the gap between slopes and areas through the Fundamental Theorem of Calculus.
+*Integration* : Exploring the accumulation of quantities to determine net change, calculating complex areas and volumes, and bridging the gap between slopes and areas through the Fundamental Theorem of Calculus.
 
 #v(0.3em)
 
-*Transcendental Functions and Advanced Techniques* — Extending calculus to exponential, logarithmic, and inverse trigonometric functions, and developing sophisticated strategies such as integration by parts and trigonometric substitution to solve intricate problems.
+*Transcendental Functions and Advanced Techniques* : Extending calculus to exponential, logarithmic, and inverse trigonometric functions, and developing sophisticated strategies such as integration by parts and trigonometric substitution to solve intricate problems.
 
 #v(1.5em)
 
@@ -74,7 +74,7 @@ The notes provided here are designed to support your learning journey, clarifyin
 
 #v(0.8em)
 
-The concepts you master in *Calculus I*—limits, derivatives, and integrals—are the indispensable tools of the future. They are the language used to describe the motion of planets, the flow of fluids, the growth of populations, and the fluctuations of markets. Whether you pursue physics, engineering, economics, or computer science, the analytical framework you build here will serve as the foundation for your advanced studies.
+The concepts you master in *Calculus I* (limits, derivatives, and integrals) are the indispensable tools of the future. They are the language used to describe the motion of planets, the flow of fluids, the growth of populations, and the fluctuations of markets. Whether you pursue physics, engineering, economics, or computer science, the analytical framework you build here will serve as the foundation for your advanced studies.
 
 #v(0.5em)
 

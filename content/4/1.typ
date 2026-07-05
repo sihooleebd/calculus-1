@@ -13,15 +13,32 @@ Remember the preview chapter? We kept talking about area and distance by choppin
   is called a *Riemann sum* for $f$ on $[a,b]$.
 ]
 
+- The most common choices of sample points are the *left endpoints*, the *right endpoints*, and the *midpoints*. Watch how differently they hug the same curve :
+
 #canvas.cartesian-canvas(
+  size: (8, 5),
   x-domain: (-0.2, 2.4),
   y-domain: (0, 5),
-  graph.graph(x => 4 - x * x, domain: (0, 2.1)),
-  graph.riemann-sum(x => 4 - x * x, (0, 2), 4, method: "left", label: $A_4$),
+  graph.graph(x => 4 - x * x, domain: (0, 2)),
+  graph.riemann-sum(x => 4 - x * x, (0, 2), 4, method: "left", label: $L_4$),
 )
 
+#canvas.cartesian-canvas(
+  size: (8, 5),
+  x-domain: (-0.2, 2.4),
+  y-domain: (0, 5),
+  graph.graph(x => 4 - x * x, domain: (0, 2)),
+  graph.riemann-sum(x => 4 - x * x, (0, 2), 4, method: "right", label: $R_4$),
+)
+
+#note("Overestimates and underestimates")[
+  Because $y = 4 - x^2$ is *decreasing* on $[0,2]$, every left rectangle pokes above the curve and every right rectangle hides below it. So
+  $ R_n <= A <= L_n $
+  and the true area $A$ is squeezed between the two. As $n$ grows, the squeeze tightens.
+]
+
 #example("Approximating the Area under " + $y = 4 - x^2$)[
-  Approximate the area under $y = 4 - x^2$ from $x = 0$ to $x = 2$ using $4$ left-endpoint rectangles.
+  Approximate the area under $y = 4 - x^2$ from $x = 0$ to $x = 2$ using $4$ left-endpoint rectangles, then using $4$ right-endpoint rectangles.
   #solution("")[
     Here
     $ Delta x = (2-0)/4 = 1/2 $
@@ -29,11 +46,48 @@ Remember the preview chapter? We kept talking about area and distance by choppin
     $ x = 0, 1/2, 1, 3/2 $
 
     So
-    $ A_4 = 1/2 lr([ 4 + (4 - 1/4) + (4 - 1) + (4 - 9/4) ]) $
+    $ L_4 = 1/2 lr([ 4 + (4 - 1/4) + (4 - 1) + (4 - 9/4) ]) $
     $ = 1/2 lr([ 4 + 15/4 + 3 + 7/4 ]) $
     $ = 1/2 dot 25/2 = 25/4 $
 
-    Visually, each rectangle is too tall because the parabola is decreasing, so this left sum should overestimate the true area.
+    The right endpoints are
+    $ x = 1/2, 1, 3/2, 2 $
+    so
+    $ R_4 = 1/2 lr([ 15/4 + 3 + 7/4 + 0 ]) = 1/2 dot 17/2 = 17/4 $
+
+    Therefore the true area $A$ satisfies
+    $ 17/4 <= A <= 25/4 $
+    Each rectangle family errs in one consistent direction because the parabola is decreasing, which is exactly why we get a two-sided bound.
+  ]
+]
+
+- Approximation is nice, but we can already do better. If we know how to add the numbers $1^2, 2^2, ..., n^2$, we can let $n -> infinity$ and get the *exact* area.
+
+#note("Summation formulas worth memorizing")[
+  $ sum_(i=1)^n i = (n(n+1))/2 $
+  $ sum_(i=1)^n i^2 = (n(n+1)(2n+1))/6 $
+  $ sum_(i=1)^n i^3 = ((n(n+1))/2)^2 $
+]
+
+#example("The Exact Area as a Limit")[
+  Find the exact area under $y = 4 - x^2$ from $x = 0$ to $x = 2$ by taking the limit of right-endpoint Riemann sums.
+  #solution("")[
+    With $n$ rectangles,
+    $ Delta x = 2/n $
+    and the right endpoints are
+    $ x_i = (2i)/n $
+
+    So
+    $ R_n = sum_(i=1)^n lr([ 4 - ((2i)/n)^2 ]) 2/n $
+    $ = 8/n sum_(i=1)^n 1 - 8/n^3 sum_(i=1)^n i^2 $
+    $ = 8 - 8/n^3 dot (n(n+1)(2n+1))/6 $
+
+    As $n -> infinity$, the fraction
+    $ (n(n+1)(2n+1))/n^3 -> 2 $
+    so
+    $ lim_(n->infinity) R_n = 8 - 8 dot 2/6 = 8 - 8/3 = 16/3 $
+
+    The area is exactly $16/3$, safely inside the bracket $[17/4, 25/4]$ we found before.
   ]
 ]
 

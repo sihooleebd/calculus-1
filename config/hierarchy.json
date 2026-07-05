@@ -31,7 +31,7 @@
   },
   {
     "title": "Derivatives",
-    "summary": "",
+    "summary": "This chapter turns the limiting process of the previous chapter into a machine: the derivative. Starting from rates of change and the derivative as a function in its own right, it builds the full computational toolkit (the power, product, quotient and chain rules, derivatives of trigonometric functions, and implicit differentiation) before returning to the real world with rates of change in science and society and the idea of linear approximation, where a curve is deliberately replaced by its own tangent line.",
     "pages": [
       {
         "title": "Derivatives and Rates of Change"
@@ -61,7 +61,7 @@
   },
   {
     "title": "Applications of Differentiation",
-    "summary": "",
+    "summary": "Here the derivative stops being a formula and starts being an instrument. The Extreme Value Theorem and the Mean Value Theorem provide the theory; increasing-decreasing behavior, concavity, and asymptotes provide the vocabulary for reading the shape of any graph. The chapter culminates in systematic curve sketching, optimization problems that turn geometry and physics into calculus, Newton's method for hunting roots numerically, and a first look at antiderivatives, the doorway into integration.",
     "pages": [
       {
         "title": "Maximum and Minimum Values"
@@ -94,7 +94,7 @@
   },
   {
     "title": "Integrals",
-    "summary": "",
+    "summary": "This chapter solves the area and distance problems posed at the very start of the course. Riemann sums chop a region into thin rectangles, and their limit defines the definite integral: a single number recording accumulated change. The Fundamental Theorem of Calculus then reveals the astonishing fact that accumulation and differentiation undo one another, collapsing area computations into antiderivative lookups. The chapter closes with the substitution rule, the chain rule run backward, and the symmetry shortcuts it explains.",
     "pages": [
       {
         "title": "The Area and Distance Problems"
@@ -115,7 +115,7 @@
   },
   {
     "title": "Applications of Integration",
-    "summary": "",
+    "summary": "One idea powers this whole chapter: slice the object, understand one slice, and let the integral add the slices back up. Vertical and horizontal slices measure areas between curves; slices revolved around an axis become disks, washers, and cylindrical shells that measure volume; slices of a rope or a tank of water measure the work done against gravity; and dividing accumulated area by the width of the interval defines the average value of a function.",
     "pages": [
       {
         "title": "Areas Between Curves"
@@ -136,7 +136,7 @@
   },
   {
     "title": "Inverse Functions",
-    "summary": "",
+    "summary": "Reflection across the line y = x generates an entire zoo of new functions. The natural logarithm is born from the area under 1/t, its inverse is the exponential function, and together they explain every other base, growth and decay processes, and logarithmic differentiation. Restricting the trigonometric functions yields their inverses, exponentials in disguise yield the hyperbolic functions, and the chapter ends with l'Hospital's Rule, the definitive tool for the indeterminate forms these functions constantly produce.",
     "pages": [
       {
         "title": "Inverse Functions and Their Derivatives"
@@ -166,7 +166,7 @@
   },
   {
     "title": "Techniques of Integration",
-    "summary": "",
+    "summary": "Differentiation is mechanical; integration is an art of recognition. This chapter assembles the working integrator's toolbox: integration by parts for products, identity games for trigonometric powers, trigonometric substitution for roots of quadratics, partial fractions for rational functions, and an overall strategy for choosing among them. It then confronts integrals that resist exact methods, with tables, technology, and the Trapezoidal and Simpson's Rules, and finishes with improper integrals, where areas over infinite regions are tamed by limits, p-tests, and comparison.",
     "pages": [
       {
         "title": "Integration by Parts"
