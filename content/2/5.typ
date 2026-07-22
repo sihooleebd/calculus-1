@@ -51,7 +51,7 @@ The chain rule is a powerful tool to solve the derivative of composite functions
 #example("Chain Rule with Trigonometric Functions")[
   Find $F'(x)$ if $F = sin(sqrt(x))$.
   #solution("")[
-    Using the chain rule, we get $F'(x) = cos(sqrt(x)) dot (1/2)(x^2 + 1)^(-1/2) dot 2x = cos(sqrt(x)) / (2 dot sqrt(x^2 + 1))$.
+    Using the chain rule, we get $F'(x) = cos(sqrt(x)) dot (1/2) x^(-1/2) = cos(sqrt(x)) / (2 sqrt(x))$.
   ]
 ]
 

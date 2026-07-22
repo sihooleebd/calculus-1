@@ -98,11 +98,12 @@
     #data.table-plot(
       headers: ($x$, $sin(pi/x)$),
       data: (
-        (1, 0),
-        (0.1, 0.58778525),
-        (0.01, 0.95105652),
-        (0.001, 0.30901699),
-        (0.0001, 0.98768834),
+        (2 / 3, -1),
+        (0.5, 0),
+        (2 / 5, 1),
+        (0.25, 0),
+        (2 / 9, 1),
+        (2 / 11, -1),
       ),
     )
     By evaluating $sin(pi/x)$ at values of $x$ that get closer and closer to $0$, we can see that the function does not approach a single value. Instead, it oscillates between $-1$ and $1$. Therefore, we can conclude that:
