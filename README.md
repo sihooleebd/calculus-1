@@ -9,7 +9,7 @@ The project is currently split into two dedicated developer tracks:
 - [Explore Lee Sihoo's Track (shlee)](https://github.com/sihooleebd/calculus-1/tree/shlee)
   - Contains chapters 0 to 7 modernized for the updated Typst environment, complete build scripts, and compiled output.pdf.
 - [Explore Lee Hojun's Track (hjlee)](https://github.com/sihooleebd/calculus-1/tree/hjlee)
-  - Contains tracks and developments by Lee Hojun.
+  - Contains tracks and developments by Hojun Lee.
 
 ## Local Setup & Workflow
 
